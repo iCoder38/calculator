@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 class AppText {
   String kTextHome = 'Home';
+  String kTextCalculator = 'Calculator';
+  String kTextIncognito = 'Incognito';
+  String kScanQuestion = 'Scan question';
 }
 
 class AppColor {

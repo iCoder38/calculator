@@ -1,3 +1,4 @@
+import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
@@ -86,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => CalculatorScreen()),
+                  MaterialPageRoute(builder: (context) => MathsScreen()),
                 );
               },
               child: Container(

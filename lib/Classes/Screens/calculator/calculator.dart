@@ -1,5 +1,10 @@
 import 'package:calculator/Classes/Logic/logic.dart';
+import 'package:calculator/Classes/Utils/resources.dart';
+import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
+
+// webview
+import 'package:webview_flutter/webview_flutter.dart';
 
 class CalculatorScreen extends StatefulWidget {
   const CalculatorScreen({super.key});
@@ -11,6 +16,12 @@ class CalculatorScreen extends StatefulWidget {
 class _CalculatorScreenState extends State<CalculatorScreen> {
   final CalculatorLogic calculatorLogic = CalculatorLogic();
   String result = '0';
+
+  // is incoginito ?
+  bool isInCognito = false;
+
+  // web view controller
+  late final WebViewController _controller;
 
   final List<String> buttons = [
     'C',
@@ -64,11 +75,49 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..loadRequest(Uri.parse('https://thebluebamboo.in'));
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Column(
-        children: [
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        title:
+            isInCognito == true
+                ? customText(AppText().kTextIncognito, 16.0, context)
+                : customText(AppText().kTextCalculator, 16.0, context),
+        centerTitle: true,
+      ),
+      body: _UIKit(context),
+    );
+  }
+
+  // Widget: incoginito mode
+  Widget wIncoginitoMode(BuildContext context) {
+    return Expanded(
+      child: Container(
+        width: MediaQuery.of(context).size.width,
+        color: AppColor().kBlue,
+        child: WebViewWidget(controller: _controller),
+      ),
+    );
+  }
+
+  // ignore: non_constant_identifier_names
+  Widget _UIKit(BuildContext context) {
+    return Column(
+      children: [
+        if (isInCognito == true) ...[
+          wIncoginitoMode(context),
+        ] else ...[
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
             decoration: BoxDecoration(color: Colors.black),
@@ -76,19 +125,29 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Calculator",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isInCognito = false;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color:
+                            isInCognito == true
+                                ? Colors.grey[800]
+                                : Colors.blue,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Calculator",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -96,30 +155,40 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 ),
                 SizedBox(width: 10),
                 Expanded(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(vertical: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[800],
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.visibility_off,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                        SizedBox(width: 5),
-                        Text(
-                          "Incognito",
-                          style: TextStyle(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        isInCognito = true;
+                      });
+                    },
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color:
+                            isInCognito == false
+                                ? Colors.grey[800]
+                                : Colors.blue,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.visibility_off,
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            size: 18,
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 5),
+                          Text(
+                            "Incognito",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -138,7 +207,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
             ),
           ),
           Expanded(
-            flex: 5,
+            flex: 6,
             child: GridView.builder(
               padding: EdgeInsets.all(10),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -152,8 +221,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               },
             ),
           ),
+          Container(
+            height: 60,
+            width: MediaQuery.of(context).size.width,
+            color: AppColor().kBlue,
+            child: Center(child: customText('Ads', 14, context)),
+          ),
         ],
-      ),
+      ],
     );
   }
 }
@@ -181,7 +256,7 @@ class CalculatorButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 16,
             color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
