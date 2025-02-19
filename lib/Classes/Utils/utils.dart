@@ -1,6 +1,24 @@
 // WIDGET
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:logger/web.dart';
+
+final Logger logger = Logger(
+  level: kReleaseMode ? Level.off : Level.debug,
+  printer: PrettyPrinter(colors: true),
+);
+void customLog(dynamic message) {
+  if (kDebugMode) {
+    // print(message);
+    logger.d(message);
+  }
+}
+
+class MathRapidApi {
+  String url = "https://photomath1.p.rapidapi.com/maths/v2/solve-problem";
+  String key = "b340a5889bmsha51af22247bdf7bp134354jsnb57156d6218c";
+}
 
 // FONTS
 class FontFamiltyNameUtils {

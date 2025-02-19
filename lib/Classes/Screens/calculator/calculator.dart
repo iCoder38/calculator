@@ -2,6 +2,7 @@ import 'package:calculator/Classes/Logic/logic.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 // webview
 import 'package:webview_flutter/webview_flutter.dart';
@@ -22,6 +23,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   // web view controller
   late final WebViewController _controller;
+
+  // banner
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
 
   final List<String> buttons = [
     'C',
@@ -78,6 +83,8 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   void initState() {
     super.initState();
 
+    // init banner
+    _loadAd();
     _controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -221,15 +228,49 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               },
             ),
           ),
-          Container(
-            height: 60,
-            width: MediaQuery.of(context).size.width,
-            color: AppColor().kBlue,
-            child: Center(child: customText('Ads', 14, context)),
-          ),
+          _isAdLoaded == false
+              ? const SizedBox()
+              : Container(
+                height: 60,
+                width: MediaQuery.of(context).size.width,
+                color: AppColor().kBlue,
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: SizedBox(
+                    width: _bannerAd!.size.width.toDouble(),
+                    height: _bannerAd!.size.height.toDouble(),
+                    child: AdWidget(ad: _bannerAd!),
+                  ),
+                ),
+              ),
         ],
       ],
     );
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test Ad Unit ID
+      size: AdSize.banner, // Standard 320x50 banner
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          print('=========================');
+          print(ad);
+          print('=========================');
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('BannerAd failed to load: $error');
+          ad.dispose();
+        },
+      ),
+    );
+
+    // Start loading the banner ad
+    _bannerAd!.load();
   }
 }
 
