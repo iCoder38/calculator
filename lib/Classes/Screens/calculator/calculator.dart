@@ -1,6 +1,7 @@
 import 'package:calculator/Classes/Logic/logic.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
@@ -15,6 +16,9 @@ class CalculatorScreen extends StatefulWidget {
 }
 
 class _CalculatorScreenState extends State<CalculatorScreen> {
+  // menu
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final CalculatorLogic calculatorLogic = CalculatorLogic();
   String result = '0';
 
@@ -88,12 +92,13 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     _controller =
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..loadRequest(Uri.parse('https://thebluebamboo.in'));
+          ..loadRequest(Uri.parse('https://google.com'));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.blue,
@@ -255,9 +260,12 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
-          print('=========================');
-          print(ad);
-          print('=========================');
+          if (kDebugMode) {
+            print('=========================');
+            print(ad);
+            print('=========================');
+          }
+
           setState(() {
             _isAdLoaded = true;
           });

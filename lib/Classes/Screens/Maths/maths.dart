@@ -1,5 +1,6 @@
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:io';
+import 'package:calculator/Classes/Utils/drawer.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ class _MathsScreenState extends State<MathsScreen> {
           icon: const Icon(Icons.menu, color: Colors.white),
         ),
       ),
+      drawer: CustomDrawer(),
       body: _buildUI(),
     );
   }
@@ -150,7 +152,7 @@ class _MathsScreenState extends State<MathsScreen> {
         'https://photomath1.p.rapidapi.com/maths/v2/solve-problem';
     final headers = {
       'x-rapidapi-host': 'photomath1.p.rapidapi.com',
-      'x-rapidapi-key': MathRapidApi().key, // ✅ Replace with actual key
+      'x-rapidapi-key': MathRapidApi().key,
     };
 
     try {
@@ -401,6 +403,5 @@ Future<File> _compressImage(File file) async {
   if (compressedFile.lengthSync() > 500 * 1024) {
     throw Exception("Image exceeds 500KB after compression.");
   }
-
   return compressedFile;
 }
