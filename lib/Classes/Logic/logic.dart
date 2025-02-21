@@ -25,7 +25,17 @@ class CalculatorLogic {
         return _evaluateExpression(currentInput);
       }
 
-      // Handling functions
+      // Handling special constants like `π` (Pi)
+      if (input == 'π') {
+        if (currentInput.isEmpty || currentInput == "0") {
+          currentInput = pi.toString(); // Set input to Pi
+        } else {
+          currentInput += pi.toString(); // Append Pi in expressions
+        }
+        return currentInput;
+      }
+
+      // Handling functions with automatic bracket formatting
       List<String> functions = [
         'sin',
         'cos',
@@ -49,6 +59,12 @@ class CalculatorLogic {
       if (functions.contains(input)) {
         if (selectedFunction.isEmpty) {
           selectedFunction = input;
+
+          // If the user already entered a number, format it as function(number)
+          if (currentInput.isNotEmpty) {
+            return "$selectedFunction($currentInput)";
+          }
+
           return "$selectedFunction()"; // Waiting for input
         } else {
           selectedFunction = input;
@@ -56,7 +72,7 @@ class CalculatorLogic {
         }
       }
 
-      // If number is entered after selecting a function, apply function
+      // If user enters a number and a function was selected, wrap number in brackets
       if (selectedFunction.isNotEmpty &&
           RegExp(r'^\d+(\.\d+)?$').hasMatch(input)) {
         currentInput += input;
@@ -111,7 +127,10 @@ class CalculatorLogic {
         return numValue.toString();
       }
 
-      expression = expression.replaceAll('÷', '/').replaceAll('×', '*');
+      expression = expression
+          .replaceAll('÷', '/')
+          .replaceAll('×', '*')
+          .replaceAll('π', pi.toString());
 
       Parser parser = Parser();
       Expression exp = parser.parse(expression);

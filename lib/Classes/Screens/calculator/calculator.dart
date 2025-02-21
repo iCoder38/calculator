@@ -218,8 +218,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               ),
             ),
           ),
+
           Expanded(
-            flex: 6,
+            flex: 7,
             child: GridView.builder(
               padding: EdgeInsets.all(10),
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -233,6 +234,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               },
             ),
           ),
+          // SizedBox(height: 8),
           _isAdLoaded == false
               ? const SizedBox()
               : Container(
