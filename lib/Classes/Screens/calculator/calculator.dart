@@ -376,7 +376,7 @@ class CalculatorButton extends StatelessWidget {
                   ? Colors
                       .orange // ✅ `=` button is now orange
                   : Colors.grey[900], // Default color for other buttons
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(0),
         ),
         child: Text(
           label,

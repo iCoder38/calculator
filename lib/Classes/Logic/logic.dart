@@ -115,12 +115,20 @@ class CalculatorLogic {
     }
   }
 
-  /// Evaluates the mathematical expression correctly
   String _evaluateExpression(String expression) {
     try {
       if (selectedFunction.isNotEmpty) {
-        double numValue = double.tryParse(currentInput) ?? 0;
+        // ✅ Extract expression inside parentheses and evaluate it
+        String innerExpression = currentInput.replaceAll(
+          RegExp(r'[^\d+\-*/().]'),
+          '',
+        );
+        Parser parser = Parser();
+        Expression exp = parser.parse(innerExpression);
+        ContextModel cm = ContextModel();
+        double numValue = exp.evaluate(EvaluationType.REAL, cm);
 
+        // ✅ Apply function to evaluated number
         if (selectedFunction == '√') {
           numValue = sqrt(numValue);
         } else if (selectedFunction == '∛') {
@@ -144,7 +152,7 @@ class CalculatorLogic {
         } else if (selectedFunction == 'eⁿ') {
           numValue = pow(e, numValue).toDouble();
         }
-        // ✅ Evaluate Inverse Trigonometric Functions
+        // ✅ Handle inverse trigonometric functions
         else if (selectedFunction == 'sin⁻¹') {
           numValue = asin(numValue) * (180 / pi);
         } else if (selectedFunction == 'cos⁻¹') {
@@ -152,7 +160,7 @@ class CalculatorLogic {
         } else if (selectedFunction == 'tan⁻¹') {
           numValue = atan(numValue) * (180 / pi);
         }
-        // ✅ Evaluate Trigonometric Functions
+        // ✅ Handle standard trigonometric functions
         else if ([
           'sin',
           'cos',
@@ -170,6 +178,7 @@ class CalculatorLogic {
         return numValue.toString();
       }
 
+      // ✅ Convert and evaluate standard mathematical expressions
       expression = expression
           .replaceAll('÷', '/')
           .replaceAll('×', '*')
