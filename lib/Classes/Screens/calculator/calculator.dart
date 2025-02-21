@@ -1,6 +1,4 @@
 import 'package:calculator/Classes/Logic/logic.dart';
-import 'package:calculator/Classes/Utils/resources.dart';
-import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -21,8 +19,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   final CalculatorLogic calculatorLogic = CalculatorLogic();
   String result = '0';
+  bool isSecondFunctionActive = false; // ✅ Toggle for `2nd` button
 
-  // is incoginito ?
+  // is incognito?
   bool isInCognito = false;
 
   // web view controller
@@ -32,7 +31,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
 
-  final List<String> buttons = [
+  final List<String> primaryButtons = [
     'C',
     '2nd',
     'MC',
@@ -77,8 +76,88 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     '=',
   ];
 
+  final List<String> secondButtons = [
+    'C',
+    '2nd',
+    'MC',
+    'M+',
+    'M-',
+    'MR',
+    'sin⁻¹',
+    'cos⁻¹',
+    'tan⁻¹',
+    'sinh',
+    'cosh',
+    'tanh',
+    'π',
+    'e',
+    '√',
+    '()',
+    '%',
+    '÷',
+    'eⁿ',
+    'log₁₀',
+    '7',
+    '8',
+    '9',
+    '×',
+    'x⁻¹',
+    '∛',
+    '4',
+    '5',
+    '6',
+    '−',
+    '√',
+    'xⁿ',
+    '1',
+    '2',
+    '3',
+    '+',
+    'x!',
+    '∛',
+    '0',
+    '.',
+    '⌫',
+    '=',
+  ];
+
   void onButtonPressed(String label) {
     setState(() {
+      if (label == '2nd') {
+        isSecondFunctionActive = !isSecondFunctionActive; // ✅ Toggle 2nd mode
+        return;
+      }
+
+      // ✅ Fixed `()` Handling (Keeps Brackets When Adding Numbers Inside)
+      if (label == '()') {
+        int openBrackets = result.split('(').length - 1;
+        int closeBrackets = result.split(')').length - 1;
+
+        if (openBrackets > closeBrackets) {
+          result += ")"; // Close bracket only if an open bracket exists
+        } else {
+          if (result == "0" || result.isEmpty) {
+            result = "("; // Start fresh with an open bracket
+          } else if (RegExp(r'[0-9)]$').hasMatch(result)) {
+            result += "×("; // Add multiplication before `(` if necessary
+          } else {
+            result += "("; // Otherwise, just add `(`
+          }
+        }
+        return;
+      }
+
+      // ✅ Ensure Bracket Stays When Entering a Number Inside `()`
+      if (RegExp(r'^\d$').hasMatch(label)) {
+        // If number is entered
+        if (result.endsWith("(")) {
+          result += label; // Keep the opening bracket and add number
+        } else {
+          result = calculatorLogic.processInput(label, result);
+        }
+        return;
+      }
+
       result = calculatorLogic.processInput(label, result);
     });
   }
@@ -103,21 +182,21 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title:
-            isInCognito == true
-                ? customText(AppText().kTextIncognito, 16.0, context)
-                : customText(AppText().kTextCalculator, 16.0, context),
+            isInCognito
+                ? Text("Browser", style: TextStyle(color: Colors.white))
+                : Text("Calculator", style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: _UIKit(context),
     );
   }
 
-  // Widget: incoginito mode
-  Widget wIncoginitoMode(BuildContext context) {
+  // Widget: Incognito mode
+  Widget wIncognitoMode(BuildContext context) {
     return Expanded(
       child: Container(
         width: MediaQuery.of(context).size.width,
-        color: AppColor().kBlue,
+        color: Colors.blue,
         child: WebViewWidget(controller: _controller),
       ),
     );
@@ -127,9 +206,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   Widget _UIKit(BuildContext context) {
     return Column(
       children: [
-        if (isInCognito == true) ...[
-          wIncoginitoMode(context),
+        if (isInCognito) ...[
+          wIncognitoMode(context),
         ] else ...[
+          // ✅ Restored Calculator & Incognito Buttons
           Container(
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
             decoration: BoxDecoration(color: Colors.black),
@@ -146,10 +226,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color:
-                            isInCognito == true
-                                ? Colors.grey[800]
-                                : Colors.blue,
+                        color: isInCognito ? Colors.grey[800] : Colors.blue,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Center(
@@ -176,10 +253,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                     child: Container(
                       padding: EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color:
-                            isInCognito == false
-                                ? Colors.grey[800]
-                                : Colors.blue,
+                        color: isInCognito ? Colors.blue : Colors.grey[800],
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Row(
@@ -218,7 +292,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
               ),
             ),
           ),
-
           Expanded(
             flex: 7,
             child: GridView.builder(
@@ -228,19 +301,22 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
                 mainAxisSpacing: 10,
                 crossAxisSpacing: 10,
               ),
-              itemCount: buttons.length,
+              itemCount: primaryButtons.length,
               itemBuilder: (context, index) {
-                return CalculatorButton(buttons[index], onButtonPressed);
+                String label =
+                    isSecondFunctionActive
+                        ? secondButtons[index]
+                        : primaryButtons[index];
+                return CalculatorButton(label, onButtonPressed);
               },
             ),
           ),
-          // SizedBox(height: 8),
           _isAdLoaded == false
               ? const SizedBox()
               : Container(
                 height: 60,
                 width: MediaQuery.of(context).size.width,
-                color: AppColor().kBlue,
+                color: Colors.blue,
                 child: Align(
                   alignment: Alignment.bottomCenter,
                   child: SizedBox(
@@ -257,17 +333,14 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   void _loadAd() {
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111', // Test Ad Unit ID
-      size: AdSize.banner, // Standard 320x50 banner
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
         onAdLoaded: (ad) {
           if (kDebugMode) {
-            print('=========================');
-            print(ad);
-            print('=========================');
+            print('Ad Loaded');
           }
-
           setState(() {
             _isAdLoaded = true;
           });
@@ -279,7 +352,6 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       ),
     );
 
-    // Start loading the banner ad
     _bannerAd!.load();
   }
 }
@@ -298,10 +370,12 @@ class CalculatorButton extends StatelessWidget {
         decoration: BoxDecoration(
           color:
               label == 'C'
-                  ? Colors.red
+                  ? Colors
+                      .redAccent // ✅ `C` button is now red accent
                   : label == '='
-                  ? Colors.orange
-                  : Colors.grey[900],
+                  ? Colors
+                      .orange // ✅ `=` button is now orange
+                  : Colors.grey[900], // Default color for other buttons
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(

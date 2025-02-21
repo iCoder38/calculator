@@ -1,9 +1,12 @@
 import 'dart:math';
+
 import 'package:math_expressions/math_expressions.dart';
 
 class CalculatorLogic {
   String currentInput = "";
   String selectedFunction = ""; // Track selected function
+  bool isSecondFunctionActive = false; // ✅ Toggle state for `2nd` button
+  double memoryValue = 0.0; // ✅ Memory register for `M+`, `M-`, `MR`
 
   String processInput(String input, String currentResult) {
     try {
@@ -25,17 +28,42 @@ class CalculatorLogic {
         return _evaluateExpression(currentInput);
       }
 
-      // Handling special constants like `π` (Pi)
-      if (input == 'π') {
-        if (currentInput.isEmpty || currentInput == "0") {
-          currentInput = pi.toString(); // Set input to Pi
-        } else {
-          currentInput += pi.toString(); // Append Pi in expressions
-        }
+      // ✅ Handle Memory Functions
+      if (input == 'MC') {
+        memoryValue = 0.0; // Clear memory
         return currentInput;
       }
 
-      // Handling functions with automatic bracket formatting
+      if (input == 'M+') {
+        double currentValue = double.tryParse(currentInput) ?? 0.0;
+        memoryValue += currentValue; // Add to memory
+        return currentInput;
+      }
+
+      if (input == 'M-') {
+        double currentValue = double.tryParse(currentInput) ?? 0.0;
+        memoryValue -= currentValue; // Subtract from memory
+        return currentInput;
+      }
+
+      if (input == 'MR') {
+        currentInput = memoryValue.toString(); // Recall memory
+        return currentInput;
+      }
+
+      // ✅ Handling Parentheses `()`
+      if (input == '(' || input == ')') {
+        currentInput += input;
+        return currentInput;
+      }
+
+      // ✅ Handling Special Constants
+      if (input == 'π') {
+        currentInput += pi.toString();
+        return currentInput;
+      }
+
+      // ✅ Handling Functions With Automatic Bracket Formatting
       List<String> functions = [
         'sin',
         'cos',
@@ -43,6 +71,9 @@ class CalculatorLogic {
         'sinh',
         'cosh',
         'tanh',
+        'sin⁻¹',
+        'cos⁻¹',
+        'tan⁻¹',
         'ln',
         'log₁₀',
         '√',
@@ -60,11 +91,9 @@ class CalculatorLogic {
         if (selectedFunction.isEmpty) {
           selectedFunction = input;
 
-          // If the user already entered a number, format it as function(number)
           if (currentInput.isNotEmpty) {
             return "$selectedFunction($currentInput)";
           }
-
           return "$selectedFunction()"; // Waiting for input
         } else {
           selectedFunction = input;
@@ -72,7 +101,7 @@ class CalculatorLogic {
         }
       }
 
-      // If user enters a number and a function was selected, wrap number in brackets
+      // ✅ If User Enters a Number and a Function Was Selected
       if (selectedFunction.isNotEmpty &&
           RegExp(r'^\d+(\.\d+)?$').hasMatch(input)) {
         currentInput += input;
@@ -95,33 +124,47 @@ class CalculatorLogic {
         if (selectedFunction == '√') {
           numValue = sqrt(numValue);
         } else if (selectedFunction == '∛') {
-          numValue = pow(numValue, 1 / 3).toDouble(); // Cube root calculation
+          numValue = pow(numValue, 1 / 3).toDouble();
         } else if (selectedFunction == 'ln') {
-          numValue = log(numValue); // Natural log (ln)
+          numValue = log(numValue);
         } else if (selectedFunction == 'log₁₀') {
-          numValue = log(numValue) / log(10); // Convert to base 10 logarithm
+          numValue = log(numValue) / log(10);
         } else if (selectedFunction == 'x²') {
-          numValue = pow(numValue, 2).toDouble(); // Square function
+          numValue = pow(numValue, 2).toDouble();
         } else if (selectedFunction == 'x³') {
-          numValue = pow(numValue, 3).toDouble(); // Cube function
+          numValue = pow(numValue, 3).toDouble();
         } else if (selectedFunction == 'x!') {
-          numValue = _factorial(numValue.toInt()).toDouble(); // Factorial
+          numValue = _factorial(numValue.toInt()).toDouble();
         } else if (selectedFunction == 'x⁻¹') {
-          numValue =
-              numValue == 0
-                  ? double.infinity
-                  : 1 / numValue; // Reciprocal (1/x)
+          numValue = numValue == 0 ? double.infinity : 1 / numValue;
         } else if (selectedFunction == 'xⁿ') {
-          return "$numValue^"; // Wait for the exponent input
+          return "$numValue^";
         } else if (selectedFunction == 'e') {
-          numValue = e; // Assign e (Euler's number)
+          numValue = e;
         } else if (selectedFunction == 'eⁿ') {
-          numValue = pow(e, numValue).toDouble(); // Calculate e^x
-        } else {
+          numValue = pow(e, numValue).toDouble();
+        }
+        // ✅ Evaluate Inverse Trigonometric Functions
+        else if (selectedFunction == 'sin⁻¹') {
+          numValue = asin(numValue) * (180 / pi);
+        } else if (selectedFunction == 'cos⁻¹') {
+          numValue = acos(numValue) * (180 / pi);
+        } else if (selectedFunction == 'tan⁻¹') {
+          numValue = atan(numValue) * (180 / pi);
+        }
+        // ✅ Evaluate Trigonometric Functions
+        else if ([
+          'sin',
+          'cos',
+          'tan',
+          'sinh',
+          'cosh',
+          'tanh',
+        ].contains(selectedFunction)) {
           numValue = _evaluateTrigonometricFunction(selectedFunction, numValue);
         }
 
-        selectedFunction = ""; // Reset after evaluation
+        selectedFunction = "";
         currentInput = "";
 
         return numValue.toString();
@@ -144,8 +187,10 @@ class CalculatorLogic {
   }
 
   /// Handles trigonometric & hyperbolic functions
+  /// Handles trigonometric & hyperbolic functions correctly
   double _evaluateTrigonometricFunction(String function, double value) {
     double radians = value * (pi / 180); // Convert degrees to radians
+
     switch (function) {
       case 'sin':
         return sin(radians);
@@ -153,6 +198,12 @@ class CalculatorLogic {
         return cos(radians);
       case 'tan':
         return tan(radians);
+      case 'sin⁻¹': // ✅ Inverse sin
+        return asin(value) * (180 / pi);
+      case 'cos⁻¹': // ✅ Inverse cos
+        return acos(value) * (180 / pi);
+      case 'tan⁻¹': // ✅ Inverse tan
+        return atan(value) * (180 / pi);
       case 'sinh':
         return _sinh(value);
       case 'cosh':
@@ -179,7 +230,7 @@ class CalculatorLogic {
 
   /// Factorial function
   int _factorial(int num) {
-    if (num < 0) return 0; // Factorial is undefined for negative numbers
+    if (num < 0) return 0;
     if (num == 0 || num == 1) return 1;
     return num * _factorial(num - 1);
   }
