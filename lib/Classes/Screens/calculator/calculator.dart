@@ -123,7 +123,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     '=',
   ];
 
-  void onButtonPressed(String label) {
+  /*void onButtonPressed(String label) {
     setState(() {
       if (label == '2nd') {
         isSecondFunctionActive = !isSecondFunctionActive; // ✅ Toggle 2nd mode
@@ -161,6 +161,41 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       }
 
       result = calculatorLogic.processInput(label, result);
+    });
+  }*/
+  void onButtonPressed(String label) {
+    setState(() {
+      if (label == '2nd') {
+        isSecondFunctionActive = !isSecondFunctionActive;
+        return;
+      }
+
+      // Handle memory operations
+      if (label == 'MC') {
+        calculatorLogic.memory = 0.0;
+      } else if (label == 'M+') {
+        try {
+          String evaluated = calculatorLogic.evaluateExpression(result);
+          double value = double.tryParse(evaluated) ?? 0.0;
+          calculatorLogic.memory += value;
+        } catch (e) {
+          result = 'Error';
+        }
+      } else if (label == 'M-') {
+        try {
+          String evaluated = calculatorLogic.evaluateExpression(result);
+          double value = double.tryParse(evaluated) ?? 0.0;
+          calculatorLogic.memory -= value;
+        } catch (e) {
+          result = 'Error';
+        }
+      } else if (label == 'MR') {
+        result = calculatorLogic.memory.toString();
+      } else if (label == '=') {
+        result = calculatorLogic.evaluateExpression(result);
+      } else {
+        result = calculatorLogic.processInput(label, result);
+      }
     });
   }
 
