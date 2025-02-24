@@ -1,18 +1,19 @@
 import 'dart:math';
-
 import 'package:math_expressions/math_expressions.dart';
 
 class CalculatorLogic {
   String currentInput = "";
   String selectedFunction = ""; // Track selected function
-  bool isSecondFunctionActive = false; // ✅ Toggle state for `2nd` button
-  double memoryValue = 0.0; // ✅ Memory register for `M+`, `M-`, `MR`
+  bool isSecondFunctionActive = false; // Toggle state for `2nd` button
+  double memoryValue = 0.0; // Memory register for `M+`, `M-`, `MR`
 
+  /// Processes user input and returns updated output
   String processInput(String input, String currentResult) {
     try {
       if (input == 'C') {
         currentInput = "";
         selectedFunction = "";
+        isSecondFunctionActive = false; // Reset the 2nd function toggle
         return "0";
       }
 
@@ -28,42 +29,41 @@ class CalculatorLogic {
         return _evaluateExpression(currentInput);
       }
 
-      // ✅ Handle Memory Functions
+      if (input == '2nd') {
+        isSecondFunctionActive =
+            !isSecondFunctionActive; // Toggle the secondary function state
+        return currentResult;
+      }
+
       if (input == 'MC') {
-        memoryValue = 0.0; // Clear memory
+        memoryValue = 0.0;
         return currentInput;
       }
 
       if (input == 'M+') {
-        double currentValue = double.tryParse(currentInput) ?? 0.0;
-        memoryValue += currentValue; // Add to memory
-        return currentInput;
+        double currentValue =
+            double.tryParse(_evaluateExpression(currentInput)) ?? 0.0;
+        memoryValue += currentValue;
+        return memoryValue.toString();
       }
 
       if (input == 'M-') {
-        double currentValue = double.tryParse(currentInput) ?? 0.0;
-        memoryValue -= currentValue; // Subtract from memory
-        return currentInput;
+        double currentValue =
+            double.tryParse(_evaluateExpression(currentInput)) ?? 0.0;
+        memoryValue -= currentValue;
+        return memoryValue.toString();
       }
 
       if (input == 'MR') {
-        currentInput = memoryValue.toString(); // Recall memory
+        currentInput = memoryValue.toString();
         return currentInput;
       }
 
-      // ✅ Handling Parentheses `()`
-      if (input == '(' || input == ')') {
+      if (input == '(' || input == ')' || input == 'π' || input == 'e') {
         currentInput += input;
         return currentInput;
       }
 
-      // ✅ Handling Special Constants
-      if (input == 'π') {
-        currentInput += pi.toString();
-        return currentInput;
-      }
-
-      // ✅ Handling Functions With Automatic Bracket Formatting
       List<String> functions = [
         'sin',
         'cos',
@@ -83,25 +83,16 @@ class CalculatorLogic {
         'x²',
         'x!',
         'x⁻¹',
-        'e',
         'eⁿ',
       ];
 
       if (functions.contains(input)) {
-        if (selectedFunction.isEmpty) {
-          selectedFunction = input;
-
-          if (currentInput.isNotEmpty) {
-            return "$selectedFunction($currentInput)";
-          }
-          return "$selectedFunction()"; // Waiting for input
-        } else {
-          selectedFunction = input;
-          return "$selectedFunction($currentInput)";
-        }
+        selectedFunction = input;
+        return currentInput.isNotEmpty
+            ? "$selectedFunction($currentInput)"
+            : "$selectedFunction()";
       }
 
-      // ✅ If User Enters a Number and a Function Was Selected
       if (selectedFunction.isNotEmpty &&
           RegExp(r'^\d+(\.\d+)?$').hasMatch(input)) {
         currentInput += input;
@@ -115,79 +106,57 @@ class CalculatorLogic {
     }
   }
 
+  /// Evaluates mathematical expressions
   String _evaluateExpression(String expression) {
     try {
-      if (selectedFunction.isNotEmpty) {
-        // ✅ Extract expression inside parentheses and evaluate it
-        String innerExpression = currentInput.replaceAll(
-          RegExp(r'[^\d+\-*/().]'),
-          '',
-        );
-        Parser parser = Parser();
-        Expression exp = parser.parse(innerExpression);
-        ContextModel cm = ContextModel();
-        double numValue = exp.evaluate(EvaluationType.REAL, cm);
-
-        // ✅ Apply function to evaluated number
-        if (selectedFunction == '√') {
-          numValue = sqrt(numValue);
-        } else if (selectedFunction == '∛') {
-          numValue = pow(numValue, 1 / 3).toDouble();
-        } else if (selectedFunction == 'ln') {
-          numValue = log(numValue);
-        } else if (selectedFunction == 'log₁₀') {
-          numValue = log(numValue) / log(10);
-        } else if (selectedFunction == 'x²') {
-          numValue = pow(numValue, 2).toDouble();
-        } else if (selectedFunction == 'x³') {
-          numValue = pow(numValue, 3).toDouble();
-        } else if (selectedFunction == 'x!') {
-          numValue = _factorial(numValue.toInt()).toDouble();
-        } else if (selectedFunction == 'x⁻¹') {
-          numValue = numValue == 0 ? double.infinity : 1 / numValue;
-        } else if (selectedFunction == 'xⁿ') {
-          return "$numValue^";
-        } else if (selectedFunction == 'e') {
-          numValue = e;
-        } else if (selectedFunction == 'eⁿ') {
-          numValue = pow(e, numValue).toDouble();
-        }
-        // ✅ Handle inverse trigonometric functions
-        else if (selectedFunction == 'sin⁻¹') {
-          numValue = asin(numValue) * (180 / pi);
-        } else if (selectedFunction == 'cos⁻¹') {
-          numValue = acos(numValue) * (180 / pi);
-        } else if (selectedFunction == 'tan⁻¹') {
-          numValue = atan(numValue) * (180 / pi);
-        }
-        // ✅ Handle standard trigonometric functions
-        else if ([
-          'sin',
-          'cos',
-          'tan',
-          'sinh',
-          'cosh',
-          'tanh',
-        ].contains(selectedFunction)) {
-          numValue = _evaluateTrigonometricFunction(selectedFunction, numValue);
-        }
-
-        selectedFunction = "";
-        currentInput = "";
-
-        return numValue.toString();
-      }
-
-      // ✅ Convert and evaluate standard mathematical expressions
+      // Convert operators
       expression = expression
           .replaceAll('÷', '/')
           .replaceAll('×', '*')
           .replaceAll('π', pi.toString());
 
+      // Handle `4%*45` as `4% of 45`
+      expression = expression.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)%\*(\d+(\.\d+)?)'),
+        (match) {
+          double base = double.parse(match.group(1)!);
+          double percent = double.parse(match.group(3)!);
+          return (base * percent / 100)
+              .toString(); // Convert to percentage calculation
+        },
+      );
+
+      // Handle `4%x45` as `4% of 45`
+      expression = expression.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)%x(\d+(\.\d+)?)'),
+        (match) {
+          double base = double.parse(match.group(1)!);
+          double percent = double.parse(match.group(3)!);
+          return (base * percent / 100)
+              .toString(); // Convert to percentage calculation
+        },
+      );
+
+      // Handle `4%45` as modulus (`4 mod 45`)
+      expression = expression.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)%(\d+(\.\d+)?)'),
+        (match) {
+          double num1 = double.parse(match.group(1)!);
+          double num2 = double.parse(match.group(3)!);
+          return (num1 % num2).toString(); // 4 % 45
+        },
+      );
+
       Parser parser = Parser();
       Expression exp = parser.parse(expression);
       ContextModel cm = ContextModel();
       double eval = exp.evaluate(EvaluationType.REAL, cm);
+
+      // If a function was selected, apply it
+      if (selectedFunction.isNotEmpty) {
+        eval = _applyFunction(selectedFunction, eval);
+        selectedFunction = ""; // Clear the function after applying it
+      }
 
       return eval.toString();
     } catch (e) {
@@ -195,11 +164,43 @@ class CalculatorLogic {
     }
   }
 
-  /// Handles trigonometric & hyperbolic functions
-  /// Handles trigonometric & hyperbolic functions correctly
+  /// Applies mathematical functions to a value
+  double _applyFunction(String function, double value) {
+    switch (function) {
+      case '√':
+        return sqrt(value);
+      case '∛':
+        return pow(value, 1 / 3).toDouble();
+      case 'ln':
+        return log(value);
+      case 'log₁₀':
+        return log(value) / log(10);
+      case 'x²':
+        return pow(value, 2).toDouble();
+      case 'x³':
+        return pow(value, 3).toDouble();
+      case 'x!':
+        return _factorial(value.toInt()).toDouble();
+      case 'x⁻¹':
+        return value == 0 ? double.infinity : 1 / value;
+      case 'e':
+        return e;
+      case 'eⁿ':
+        return pow(e, value).toDouble();
+      case 'sin⁻¹':
+        return asin(value) * (180 / pi);
+      case 'cos⁻¹':
+        return acos(value) * (180 / pi);
+      case 'tan⁻¹':
+        return atan(value) * (180 / pi);
+      default:
+        return _evaluateTrigonometricFunction(function, value);
+    }
+  }
+
+  /// Handles trigonometric and hyperbolic functions
   double _evaluateTrigonometricFunction(String function, double value) {
     double radians = value * (pi / 180); // Convert degrees to radians
-
     switch (function) {
       case 'sin':
         return sin(radians);
@@ -207,12 +208,6 @@ class CalculatorLogic {
         return cos(radians);
       case 'tan':
         return tan(radians);
-      case 'sin⁻¹': // ✅ Inverse sin
-        return asin(value) * (180 / pi);
-      case 'cos⁻¹': // ✅ Inverse cos
-        return acos(value) * (180 / pi);
-      case 'tan⁻¹': // ✅ Inverse tan
-        return atan(value) * (180 / pi);
       case 'sinh':
         return _sinh(value);
       case 'cosh':
@@ -225,17 +220,9 @@ class CalculatorLogic {
   }
 
   /// Manually implementing hyperbolic functions
-  double _sinh(double x) {
-    return (exp(x) - exp(-x)) / 2;
-  }
-
-  double _cosh(double x) {
-    return (exp(x) + exp(-x)) / 2;
-  }
-
-  double _tanh(double x) {
-    return _sinh(x) / _cosh(x);
-  }
+  double _sinh(double x) => (exp(x) - exp(-x)) / 2;
+  double _cosh(double x) => (exp(x) + exp(-x)) / 2;
+  double _tanh(double x) => _sinh(x) / _cosh(x);
 
   /// Factorial function
   int _factorial(int num) {
