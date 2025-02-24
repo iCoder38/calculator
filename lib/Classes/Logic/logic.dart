@@ -3,9 +3,9 @@ import 'package:math_expressions/math_expressions.dart';
 
 class CalculatorLogic {
   String currentInput = "";
-  String selectedFunction = ""; // Track selected function
-  bool isSecondFunctionActive = false; // Toggle state for `2nd` button
-  double memoryValue = 0.0; // Memory register for `M+`, `M-`, `MR`
+  String selectedFunction = "";
+  bool isSecondFunctionActive = false;
+  double memoryValue = 0.0;
 
   /// Processes user input and returns updated output
   String processInput(String input, String currentResult) {
@@ -13,7 +13,7 @@ class CalculatorLogic {
       if (input == 'C') {
         currentInput = "";
         selectedFunction = "";
-        isSecondFunctionActive = false; // Reset the 2nd function toggle
+        isSecondFunctionActive = false;
         return "0";
       }
 
@@ -30,8 +30,7 @@ class CalculatorLogic {
       }
 
       if (input == '2nd') {
-        isSecondFunctionActive =
-            !isSecondFunctionActive; // Toggle the secondary function state
+        isSecondFunctionActive = !isSecondFunctionActive;
         return currentResult;
       }
 
@@ -59,9 +58,72 @@ class CalculatorLogic {
         return currentInput;
       }
 
+      if (input == 'xⁿ') {
+        if (currentInput.isNotEmpty) {
+          currentInput += "^";
+          return currentInput;
+        }
+        return "Error: Enter base first";
+      }
+
       if (input == '(' || input == ')' || input == 'π' || input == 'e') {
         currentInput += input;
         return currentInput;
+      }
+
+      if (input == "(") {
+        if (currentInput.isEmpty ||
+            RegExp(r'[+\-×÷^]$').hasMatch(currentInput)) {
+          currentInput += "(";
+        } else if (RegExp(r'[0-9πe)]$').hasMatch(currentInput)) {
+          currentInput += "×("; // Ensure multiplication before "(" when needed
+        } else {
+          currentInput += "(";
+        }
+        return currentInput;
+      }
+
+      if (input == ")") {
+        int openBrackets = currentInput.split("(").length - 1;
+        int closeBrackets = currentInput.split(")").length - 1;
+
+        if (openBrackets > closeBrackets &&
+            RegExp(r'[0-9πe)]$').hasMatch(currentInput)) {
+          currentInput += ")";
+        }
+        return currentInput;
+      }
+
+      // ✅ Ensure that numbers inside parentheses don't disappear
+      if (RegExp(r'^\d+$').hasMatch(input)) {
+        if (currentInput.isNotEmpty && currentInput.endsWith("(")) {
+          // ✅ Directly append first number inside brackets
+          currentInput += input;
+        } else {
+          currentInput += input;
+        }
+        return currentInput;
+      }
+
+      if (input == 'x!') {
+        RegExp numberRegex = RegExp(r'\d+$'); // Find last number in input
+        Match? match = numberRegex.firstMatch(currentInput);
+
+        if (match != null) {
+          String numberStr = match.group(0)!;
+          int number = int.parse(numberStr);
+
+          if (number < 0) return "Error: Factorial not defined for negatives";
+
+          // Replace last number with its factorial
+          currentInput = currentInput.replaceFirst(
+            numberStr,
+            _factorial(number).toString(),
+          );
+          return currentInput;
+        } else {
+          return "Error: Enter a valid number first";
+        }
       }
 
       List<String> functions = [
@@ -109,59 +171,62 @@ class CalculatorLogic {
   /// Evaluates mathematical expressions
   String _evaluateExpression(String expression) {
     try {
-      // Convert operators
+      // Convert operators to standard math symbols
       expression = expression
           .replaceAll('÷', '/')
           .replaceAll('×', '*')
           .replaceAll('π', pi.toString());
 
-      // Handle `4%*45` as `4% of 45`
+      // Ensure brackets are balanced before evaluating
+      if (!_areBracketsBalanced(expression)) {
+        return "Error: Unmatched brackets";
+      }
+
+      // Handle Factorial (`x!`)
       expression = expression.replaceAllMapped(
-        RegExp(r'(\d+(\.\d+)?)%\*(\d+(\.\d+)?)'),
+        RegExp(r'(\d+)!'), // Match numbers followed by '!'
+        (match) {
+          int number = int.parse(match.group(1)!);
+          return _factorial(number).toString();
+        },
+      );
+
+      // Handle Exponentiation (`xⁿ`)
+      expression = expression.replaceAllMapped(
+        RegExp(r'(\d+(\.\d+)?)\^(\d+(\.\d+)?)'),
         (match) {
           double base = double.parse(match.group(1)!);
-          double percent = double.parse(match.group(3)!);
-          return (base * percent / 100)
-              .toString(); // Convert to percentage calculation
+          double exponent = double.parse(match.group(3)!);
+          return pow(base, exponent).toString();
         },
       );
 
-      // Handle `4%x45` as `4% of 45`
-      expression = expression.replaceAllMapped(
-        RegExp(r'(\d+(\.\d+)?)%x(\d+(\.\d+)?)'),
-        (match) {
-          double base = double.parse(match.group(1)!);
-          double percent = double.parse(match.group(3)!);
-          return (base * percent / 100)
-              .toString(); // Convert to percentage calculation
-        },
-      );
-
-      // Handle `4%45` as modulus (`4 mod 45`)
-      expression = expression.replaceAllMapped(
-        RegExp(r'(\d+(\.\d+)?)%(\d+(\.\d+)?)'),
-        (match) {
-          double num1 = double.parse(match.group(1)!);
-          double num2 = double.parse(match.group(3)!);
-          return (num1 % num2).toString(); // 4 % 45
-        },
-      );
-
+      // Parse and evaluate the modified expression
       Parser parser = Parser();
       Expression exp = parser.parse(expression);
       ContextModel cm = ContextModel();
       double eval = exp.evaluate(EvaluationType.REAL, cm);
 
-      // If a function was selected, apply it
       if (selectedFunction.isNotEmpty) {
         eval = _applyFunction(selectedFunction, eval);
-        selectedFunction = ""; // Clear the function after applying it
+        selectedFunction = "";
       }
 
       return eval.toString();
     } catch (e) {
       return "Error";
     }
+  }
+
+  /// Checks if brackets are balanced in an expression
+  bool _areBracketsBalanced(String expression) {
+    int balance = 0;
+    for (int i = 0; i < expression.length; i++) {
+      if (expression[i] == '(') balance++;
+      if (expression[i] == ')') balance--;
+      if (balance < 0) return false;
+    }
+    return balance == 0;
   }
 
   /// Applies mathematical functions to a value
@@ -200,7 +265,7 @@ class CalculatorLogic {
 
   /// Handles trigonometric and hyperbolic functions
   double _evaluateTrigonometricFunction(String function, double value) {
-    double radians = value * (pi / 180); // Convert degrees to radians
+    double radians = value * (pi / 180);
     switch (function) {
       case 'sin':
         return sin(radians);
@@ -224,10 +289,14 @@ class CalculatorLogic {
   double _cosh(double x) => (exp(x) + exp(-x)) / 2;
   double _tanh(double x) => _sinh(x) / _cosh(x);
 
-  /// Factorial function
+  /// Improved Factorial function
   int _factorial(int num) {
-    if (num < 0) return 0;
+    if (num < 0) throw ArgumentError("Factorial is not defined for negatives");
     if (num == 0 || num == 1) return 1;
-    return num * _factorial(num - 1);
+    int result = 1;
+    for (int i = 2; i <= num; i++) {
+      result *= i;
+    }
+    return result;
   }
 }
