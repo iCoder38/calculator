@@ -1,4 +1,5 @@
 import 'package:calculator/Classes/Logic/logic.dart';
+import 'package:calculator/Classes/Utils/drawer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -218,12 +219,18 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.blue,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+          icon: const Icon(Icons.menu, color: Colors.white),
+        ),
         title:
             isInCognito
                 ? Text("Browser", style: TextStyle(color: Colors.white))
                 : Text("Calculator", style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
+      drawer: CustomDrawer(),
       body: _UIKit(context),
     );
   }

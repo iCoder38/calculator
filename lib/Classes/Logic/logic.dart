@@ -364,9 +364,9 @@ class CalculatorLogic {
             ? '0'
             : currentResult.substring(0, currentResult.length - 1);
       case 'π':
-        return currentResult == '0' ? 'π' : currentResult + 'π';
+        return currentResult == '0' ? 'π' : '$currentResultπ';
       case 'e':
-        return currentResult == '0' ? 'e' : currentResult + 'e';
+        return currentResult == '0' ? 'e' : '${currentResult}e';
 
       // ✅ Ensure `sin(`, `cos(`, `tan(` start fresh (remove default "0")
       case 'sin':
@@ -383,7 +383,6 @@ class CalculatorLogic {
       case '∛':
       case 'eⁿ':
         return '${currentResult == '0' ? '' : currentResult}$label(';
-
       case 'x²':
         return '$currentResult^2';
       case 'x³':
@@ -396,7 +395,6 @@ class CalculatorLogic {
         return '$currentResult!';
       case 'log₁₀':
         return '${currentResult == '0' ? '' : currentResult}log10(';
-
       case '(':
       case ')':
         return currentResult + label;

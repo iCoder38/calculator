@@ -142,7 +142,77 @@ class _CustomDrawerState extends State<CustomDrawer> {
             ),
           ),
 
-          const SizedBox(height: 40),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CustomBannerButton(
+              text: 'EDIT URL',
+              textSize: 18.0,
+              bgColor: Colors.blue,
+              bgImage: AppImage().kPrimaryBlueImage,
+              iconImage: "assets/images/lock@3x.png",
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CustomBannerButton(
+              text: 'PHOTO MATH',
+              textSize: 18.0,
+              bgColor: Colors.blue,
+              bgImage: AppImage().kPrimaryBlueImage,
+              iconImage: "assets/images/lock@3x.png",
+            ),
+          ),
+          Row(
+            children: [
+              SizedBox(width: 20),
+              customText(
+                'About',
+                22.0,
+                context,
+                lightModeColor: AppColor().kWhite,
+                fontWeight: FontWeight.w600,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              SizedBox(width: 20),
+              customText(
+                'Incognito calculator',
+                14.0,
+                context,
+                lightModeColor: AppColor().kWhite,
+                fontWeight: FontWeight.w600,
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              SizedBox(width: 12),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: customText(
+                  'hi@incognitocalculator.com',
+                  14.0,
+                  context,
+                  lightModeColor: AppColor().kWhite,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              SizedBox(width: 20),
+              customText(
+                'Call: 1-88-471-5624',
+                14.0,
+                context,
+                lightModeColor: AppColor().kWhite,
+                fontWeight: FontWeight.w600,
+              ),
+            ],
+          ),
           /*customText(
             'v ${AppVersion().appVersion} (${AppVersion().appBuild})',
             12.0,
