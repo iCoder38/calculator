@@ -103,8 +103,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // Mark user as subscribed
           setState(() {
             _isSubscribed = true;
+            subscribed(true);
           });
-          subscribed(true);
 
           // Complete the purchase
           if (purchase.pendingCompletePurchase) {
@@ -114,6 +114,8 @@ class _HomeScreenState extends State<HomeScreen> {
           customLog("❌ Subscription purchase failed: ${purchase.error}");
           subscribed(false);
         }
+      } else {
+        subscribed(false);
       }
     }
   }

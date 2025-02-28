@@ -5,7 +5,7 @@
 
 
     <application
-        android:label="ritevet_dart"
+        android:label="Calculator Incoginito"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 

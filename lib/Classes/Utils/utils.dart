@@ -15,6 +15,11 @@ void customLog(dynamic message) {
   }
 }
 
+class AppConfig {
+  String v = '0.0.1';
+  String b = '1';
+}
+
 class MathRapidApi {
   String url = "https://photomath1.p.rapidapi.com/maths/v2/solve-problem";
   String key = "b340a5889bmsha51af22247bdf7bp134354jsnb57156d6218c";

@@ -1,6 +1,8 @@
 // custom_drawer.dart
 // import 'dart:convert';
 
+import 'package:calculator/Classes/Screens/Maths/maths.dart';
+import 'package:calculator/Classes/Screens/calculator/calculator.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/reusable/resuable.dart';
@@ -196,10 +198,53 @@ class _CustomDrawerState extends State<CustomDrawer> {
               ? Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: CustomBannerButton(
+                  text: 'CALCULATOR',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CalculatorScreen(),
+                      ),
+                    );
+                  },
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'CALCULATOR',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+
+                  iconImage: "assets/images/lock@3x.png",
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CalculatorScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
+          isSubscribed
+              ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
                   text: 'PHOTO MATH',
                   textSize: 18.0,
                   bgColor: Colors.blue,
                   bgImage: AppImage().kPrimaryBlueImage,
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MathsScreen()),
+                    );
+                  },
                 ),
               )
               : Padding(
@@ -210,6 +255,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   bgColor: Colors.blue,
                   bgImage: AppImage().kPrimaryBlueImage,
                   iconImage: "assets/images/lock@3x.png",
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => MathsScreen()),
+                    );
+                  },
                 ),
               ),
           Row(
@@ -262,6 +313,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 fontWeight: FontWeight.w600,
               ),
             ],
+          ),
+          SizedBox(height: 40),
+          customText(
+            "${AppConfig().v} (${AppConfig().b})",
+            12.0,
+            context,
+            lightModeColor: Colors.grey,
           ),
           /*customText(
             'v ${AppVersion().appVersion} (${AppVersion().appBuild})',
