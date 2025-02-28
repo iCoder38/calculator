@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:calculator/Classes/Logic/logic.dart';
 import 'package:calculator/Classes/Utils/drawer.dart';
+import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-
+import 'package:in_app_purchase/in_app_purchase.dart';
+// import 'package:in_app_purchase/in_app_purchase.dart';
 // webview
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -31,6 +36,10 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   // banner
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
+
+  // flutter secure storage
+  final FlutterSecureStorage storage = FlutterSecureStorage();
+  bool isSubscribed = false;
 
   final List<String> primaryButtons = [
     'C',
@@ -210,6 +219,26 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         WebViewController()
           ..setJavaScriptMode(JavaScriptMode.unrestricted)
           ..loadRequest(Uri.parse('https://google.com'));
+
+    //
+    getValue();
+  }
+
+  getValue() async {
+    bool isLoggedIn = await getBoolSecurely('isSubscribed');
+    customLog("🔍 Retrieved: isLoggedIn = $isLoggedIn");
+    if (isLoggedIn) {
+      isSubscribed = true;
+      setState(() {});
+    } else {
+      setState(() {});
+    }
+  }
+
+  Future<bool> getBoolSecurely(String key) async {
+    final FlutterSecureStorage storage = FlutterSecureStorage();
+    String? value = await storage.read(key: key);
+    return value == "true";
   }
 
   @override
@@ -358,7 +387,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
           _isAdLoaded == false
               ? const SizedBox()
               : Container(
-                height: 60,
+                height: isSubscribed ? 0 : 60,
                 width: MediaQuery.of(context).size.width,
                 color: Colors.blue,
                 child: Align(

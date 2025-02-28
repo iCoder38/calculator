@@ -20,6 +20,10 @@ class MathRapidApi {
   String key = "b340a5889bmsha51af22247bdf7bp134354jsnb57156d6218c";
 }
 
+class InAppProductId {
+  String productId = "ad_free_099";
+}
+
 // FONTS
 class FontFamiltyNameUtils {
   var fontOrbitron = 'o';

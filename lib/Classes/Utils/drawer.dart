@@ -7,6 +7,7 @@ import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 // import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -20,12 +21,35 @@ class _CustomDrawerState extends State<CustomDrawer> {
   String loginUserName = '';
   String loginUserAddress = '';
   var displayProfilePicture = '';
+  bool isSubscribed = false;
+  bool isScreenLoader = true;
 
   @override
   void initState() {
     //
-
+    getValue();
     super.initState();
+  }
+
+  getValue() async {
+    bool isLoggedIn = await getBoolSecurely('isSubscribed');
+    customLog("🔍 Retrieved: isLoggedIn = $isLoggedIn");
+    if (isLoggedIn) {
+      isSubscribed = true;
+      setState(() {
+        isScreenLoader = false;
+      });
+    } else {
+      setState(() {
+        isScreenLoader = false;
+      });
+    }
+  }
+
+  Future<bool> getBoolSecurely(String key) async {
+    final FlutterSecureStorage storage = FlutterSecureStorage();
+    String? value = await storage.read(key: key);
+    return value == "true";
   }
 
   /*Future<Map<String, dynamic>?> getLoginResponse() async {
@@ -59,7 +83,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
   Widget build(BuildContext context) {
     return Drawer(
       backgroundColor: AppColor().kBlack,
-      child: _UIKit(context),
+      child: isScreenLoader == true ? SizedBox() : _UIKit(context),
       // _UIKit(context),
     );
   }
@@ -94,14 +118,17 @@ class _CustomDrawerState extends State<CustomDrawer> {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CustomBannerButton(
-              text: 'Upgrade to ads free'.toUpperCase(),
-              textSize: 18.0,
-              bgColor: AppColor().kBlue,
-            ),
-          ),
+          isSubscribed
+              ? SizedBox()
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'Upgrade to ads free'.toUpperCase(),
+                  textSize: 18.0,
+                  bgColor: AppColor().kBlue,
+                ),
+              ),
+
           buildListTile(title: "Zero ads", icon: Icons.check, onTap: () {}),
           buildListTile(
             title: "Edit incognito URL",
@@ -124,42 +151,67 @@ class _CustomDrawerState extends State<CustomDrawer> {
             },
           ),
           SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CustomBannerButton(
-              text: 'UPGRADE NOW',
-              textSize: 18.0,
-              bgColor: Colors.blue,
-              bgImage: AppImage().kPrimaryYellowImage,
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
-                );
-              },
-            ),
-          ),
+          isSubscribed
+              ? SizedBox()
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'UPGRADE NOW',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryYellowImage,
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SubscriptionTestScreen(),
+                      ),
+                    );
+                  },
+                ),
+              ),
 
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CustomBannerButton(
-              text: 'EDIT URL',
-              textSize: 18.0,
-              bgColor: Colors.blue,
-              bgImage: AppImage().kPrimaryBlueImage,
-              iconImage: "assets/images/lock@3x.png",
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CustomBannerButton(
-              text: 'PHOTO MATH',
-              textSize: 18.0,
-              bgColor: Colors.blue,
-              bgImage: AppImage().kPrimaryBlueImage,
-              iconImage: "assets/images/lock@3x.png",
-            ),
-          ),
+          isSubscribed
+              ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'EDIT URL',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'EDIT URL',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+
+                  iconImage: "assets/images/lock@3x.png",
+                ),
+              ),
+          isSubscribed
+              ? Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'PHOTO MATH',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+                ),
+              )
+              : Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: CustomBannerButton(
+                  text: 'PHOTO MATH',
+                  textSize: 18.0,
+                  bgColor: Colors.blue,
+                  bgImage: AppImage().kPrimaryBlueImage,
+                  iconImage: "assets/images/lock@3x.png",
+                ),
+              ),
           Row(
             children: [
               SizedBox(width: 20),
