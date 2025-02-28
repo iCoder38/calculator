@@ -8,7 +8,7 @@ buildscript {
         // Add the Android Gradle Plugin and Kotlin Gradle Plugin versions
         classpath 'com.android.tools.build:gradle:8.0.0' // Update to latest stable version
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.8.0" // Update Kotlin version
-        classpath 'com.google.gms:google-services:4.3.15' // For Firebase (if used)
+        // classpath 'com.google.gms:google-services:4.3.15' // For Firebase (if used)
     }
 }
 

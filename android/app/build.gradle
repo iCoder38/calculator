@@ -8,6 +8,13 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Load signing properties from key.properties
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.calculator.prod"
     compileSdk = flutter.compileSdkVersion
@@ -33,11 +40,21 @@ android {
         multiDexEnabled true
     }
 
+    signingConfigs {
+        release {
+            storeFile file(keystoreProperties['storeFile'])
+            storePassword keystoreProperties['storePassword']
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
@@ -48,5 +65,8 @@ flutter {
 
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1' // Required for multidex support
-    implementation 'com.stripe:stripe-android:20.18.0' // Add Stripe SDK (latest version)
+    implementation 'com.stripe:stripe-android:20.18.0' // Stripe SDK
+    implementation 'com.google.android.libraries.places:places:3.3.0' // Google Places API
+    implementation 'org.bouncycastle:bcprov-jdk15to18:1.70' // BouncyCastle for security
+    implementation 'com.android.billingclient:billing:6.0.1' // Latest version
 }

@@ -1,6 +1,7 @@
 // custom_drawer.dart
 // import 'dart:convert';
 
+import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
@@ -101,16 +102,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
               bgColor: AppColor().kBlue,
             ),
           ),
-          buildListTile(
-            title: "Zero ads",
-            icon: Icons.check,
-            onTap: () {
-              /*Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => DashboardScreen()),
-              );*/
-            },
-          ),
+          buildListTile(title: "Zero ads", icon: Icons.check, onTap: () {}),
           buildListTile(
             title: "Edit incognito URL",
             icon: Icons.check,
@@ -139,6 +131,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
               textSize: 18.0,
               bgColor: Colors.blue,
               bgImage: AppImage().kPrimaryYellowImage,
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
+                );
+              },
             ),
           ),
 
