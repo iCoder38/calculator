@@ -491,7 +491,7 @@
 				DEVELOPMENT_TEAM = 3G48Y9STDS;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginito";
+				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginitoo.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -682,7 +682,7 @@
 				DEVELOPMENT_TEAM = 3G48Y9STDS;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginito";
+				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginitoo.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -713,7 +713,7 @@
 				DEVELOPMENT_TEAM = 3G48Y9STDS;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginito";
+				INFOPLIST_KEY_CFBundleDisplayName = "Calculator Incoginitoo.";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.education";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
 				LD_RUNPATH_SEARCH_PATHS = (

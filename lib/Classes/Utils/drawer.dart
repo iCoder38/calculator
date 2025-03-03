@@ -194,43 +194,23 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   iconImage: "assets/images/lock@3x.png",
                 ),
               ),
-          isSubscribed
-              ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CustomBannerButton(
-                  text: 'CALCULATOR',
-                  textSize: 18.0,
-                  bgColor: Colors.blue,
-                  bgImage: AppImage().kPrimaryBlueImage,
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CalculatorScreen(),
-                      ),
-                    );
-                  },
-                ),
-              )
-              : Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: CustomBannerButton(
-                  text: 'CALCULATOR',
-                  textSize: 18.0,
-                  bgColor: Colors.blue,
-                  bgImage: AppImage().kPrimaryBlueImage,
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CustomBannerButton(
+              text: 'CALCULATOR',
+              textSize: 18.0,
+              bgColor: Colors.blue,
+              bgImage: AppImage().kPrimaryBlueImage,
 
-                  iconImage: "assets/images/lock@3x.png",
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CalculatorScreen(),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              // iconImage: "assets/images/lock@3x.png",
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => CalculatorScreen()),
+                );
+              },
+            ),
+          ),
           isSubscribed
               ? Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -255,12 +235,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   bgColor: Colors.blue,
                   bgImage: AppImage().kPrimaryBlueImage,
                   iconImage: "assets/images/lock@3x.png",
-                  onPressed: () {
+                  /*onPressed: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (context) => MathsScreen()),
                     );
-                  },
+                  },*/
                 ),
               ),
           Row(

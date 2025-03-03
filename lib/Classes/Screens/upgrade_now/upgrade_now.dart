@@ -205,6 +205,8 @@ import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
 class SubscriptionTestScreen extends StatefulWidget {
+  const SubscriptionTestScreen({super.key});
+
   @override
   _SubscriptionTestScreenState createState() => _SubscriptionTestScreenState();
 }
@@ -229,11 +231,11 @@ class _SubscriptionTestScreenState extends State<SubscriptionTestScreen> {
     }
 
     // Query available subscriptions
-    const Set<String> _productIds = {
-      'ad_free_099',
+    Set<String> productIds = {
+      InAppProductId().productId,
     }; // Replace with your Product ID
     ProductDetailsResponse response = await _iap.queryProductDetails(
-      _productIds,
+      productIds,
     );
 
     if (response.notFoundIDs.isNotEmpty) {
@@ -248,7 +250,11 @@ class _SubscriptionTestScreenState extends State<SubscriptionTestScreen> {
 
   void _buySubscription(ProductDetails product) {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    _iap.buyNonConsumable(purchaseParam: purchaseParam);
+
+    _iap.buyConsumable(
+      purchaseParam: purchaseParam,
+      autoConsume: false, // Important: Set false for subscriptions
+    );
   }
 
   @override
