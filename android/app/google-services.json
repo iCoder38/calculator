@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "870207661094",
+    "project_id": "calculator-incognito",
+    "storage_bucket": "calculator-incognito.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:870207661094:android:f81017d91ca323652cf2e7",
+        "android_client_info": {
+          "package_name": "com.calculator.prod"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARy4OmbOHYuZhO93M6Rli_4-Td95clIF4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

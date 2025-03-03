@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:calculator/Classes/Logic/logic.dart';
 import 'package:calculator/Classes/Utils/drawer.dart';
+import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -40,6 +42,11 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   // flutter secure storage
   final FlutterSecureStorage storage = FlutterSecureStorage();
   bool isSubscribed = false;
+  // store firebase URL
+  var firebaseSavePublicObject;
+  String storeURL = '';
+
+  bool screenLoader = true;
 
   final List<String> primaryButtons = [
     'C',
@@ -212,15 +219,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
-
     // init banner
     _loadAd();
-    _controller =
-        WebViewController()
-          ..setJavaScriptMode(JavaScriptMode.unrestricted)
-          ..loadRequest(Uri.parse('https://google.com'));
-
-    //
+    // load subscription
     getValue();
   }
 
@@ -229,10 +230,57 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
     customLog("🔍 Retrieved: isLoggedIn = $isLoggedIn");
     if (isLoggedIn) {
       isSubscribed = true;
-      setState(() {});
+      checkStoredUrl();
     } else {
-      setState(() {});
+      ensureUserDocumentExists();
     }
+  }
+
+  void ensureUserDocumentExists() async {
+    DocumentReference userRef = FirebaseFirestore.instance
+        .collection("Calculator_Incognito/Public_URL/Details")
+        .doc("3zaZZcXgFDLisSlnBuUx");
+
+    DocumentSnapshot userSnapshot = await userRef.get();
+    if (!userSnapshot.exists) {
+      debugPrint('NOT EXIST');
+    } else {
+      debugPrint('EXIST');
+      firebaseSavePublicObject = userSnapshot.data();
+      storeURL = firebaseSavePublicObject['public_url'].toString();
+      initWebView();
+    }
+  }
+
+  void checkStoredUrl() async {
+    String? storedUrlMain = await getSavedUrl();
+    storeURL = fixUrl(storedUrlMain.toString());
+    customLog("Stored URL: $storeURL");
+
+    if (storeURL == "No URL Found") {
+      ensureUserDocumentExists();
+    } else {
+      initWebView();
+    }
+  }
+
+  void initWebView() {
+    customLog(storeURL);
+
+    _controller =
+        WebViewController()
+          ..setJavaScriptMode(JavaScriptMode.unrestricted)
+          ..loadRequest(Uri.parse(storeURL)).then((v) {});
+    setState(() {
+      screenLoader = false;
+    });
+  }
+
+  String fixUrl(String url) {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return "https://$url";
+    }
+    return url;
   }
 
   Future<bool> getBoolSecurely(String key) async {
@@ -277,131 +325,133 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
 
   // ignore: non_constant_identifier_names
   Widget _UIKit(BuildContext context) {
-    return Column(
-      children: [
-        if (isInCognito) ...[
-          wIncognitoMode(context),
-        ] else ...[
-          // ✅ Restored Calculator & Incognito Buttons
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
-            decoration: BoxDecoration(color: Colors.black),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isInCognito = false;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isInCognito ? Colors.grey[800] : Colors.blue,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Calculator",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+    return screenLoader == true
+        ? SizedBox()
+        : Column(
+          children: [
+            if (isInCognito) ...[
+              wIncognitoMode(context),
+            ] else ...[
+              // ✅ Restored Calculator & Incognito Buttons
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10, vertical: 20),
+                decoration: BoxDecoration(color: Colors.black),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isInCognito = false;
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isInCognito ? Colors.grey[800] : Colors.blue,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Center(
+                            child: Text(
+                              "Calculator",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            isInCognito = true;
+                          });
+                        },
+                        child: Container(
+                          padding: EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: isInCognito ? Colors.blue : Colors.grey[800],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.visibility_off,
+                                color: Colors.white,
+                                size: 18,
+                              ),
+                              SizedBox(width: 5),
+                              Text(
+                                "Incognito",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 2,
+                child: Container(
+                  alignment: Alignment.bottomRight,
+                  padding: EdgeInsets.all(20),
+                  child: Text(
+                    result,
+                    style: TextStyle(fontSize: 24, color: Colors.white),
                   ),
                 ),
-                SizedBox(width: 10),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        isInCognito = true;
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 10),
-                      decoration: BoxDecoration(
-                        color: isInCognito ? Colors.blue : Colors.grey[800],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.visibility_off,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                          SizedBox(width: 5),
-                          Text(
-                            "Incognito",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+              ),
+              Expanded(
+                flex: 7,
+                child: GridView.builder(
+                  padding: EdgeInsets.all(10),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 6,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                  ),
+                  itemCount: primaryButtons.length,
+                  itemBuilder: (context, index) {
+                    String label =
+                        isSecondFunctionActive
+                            ? secondButtons[index]
+                            : primaryButtons[index];
+                    return CalculatorButton(label, onButtonPressed);
+                  },
+                ),
+              ),
+              _isAdLoaded == false
+                  ? const SizedBox()
+                  : Container(
+                    height: isSubscribed ? 0 : 60,
+                    width: MediaQuery.of(context).size.width,
+                    color: Colors.blue,
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: SizedBox(
+                        width: _bannerAd!.size.width.toDouble(),
+                        height: _bannerAd!.size.height.toDouble(),
+                        child: AdWidget(ad: _bannerAd!),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            flex: 2,
-            child: Container(
-              alignment: Alignment.bottomRight,
-              padding: EdgeInsets.all(20),
-              child: Text(
-                result,
-                style: TextStyle(fontSize: 24, color: Colors.white),
-              ),
-            ),
-          ),
-          Expanded(
-            flex: 7,
-            child: GridView.builder(
-              padding: EdgeInsets.all(10),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 6,
-                mainAxisSpacing: 10,
-                crossAxisSpacing: 10,
-              ),
-              itemCount: primaryButtons.length,
-              itemBuilder: (context, index) {
-                String label =
-                    isSecondFunctionActive
-                        ? secondButtons[index]
-                        : primaryButtons[index];
-                return CalculatorButton(label, onButtonPressed);
-              },
-            ),
-          ),
-          _isAdLoaded == false
-              ? const SizedBox()
-              : Container(
-                height: isSubscribed ? 0 : 60,
-                width: MediaQuery.of(context).size.width,
-                color: Colors.blue,
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: SizedBox(
-                    width: _bannerAd!.size.width.toDouble(),
-                    height: _bannerAd!.size.height.toDouble(),
-                    child: AdWidget(ad: _bannerAd!),
-                  ),
-                ),
-              ),
-        ],
-      ],
-    );
+            ],
+          ],
+        );
   }
 
   void _loadAd() {

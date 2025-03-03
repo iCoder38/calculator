@@ -1,5 +1,6 @@
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class CustomBannerButton extends StatelessWidget {
   final String text;
@@ -68,4 +69,70 @@ class CustomBannerButton extends StatelessWidget {
       ),
     );
   }
+}
+
+final FlutterSecureStorage secureStorage = FlutterSecureStorage();
+
+void showUrlBottomSheet({
+  required BuildContext context,
+  required Function(String) onUpdate,
+}) {
+  TextEditingController urlController = TextEditingController();
+
+  // Fetch stored URL before showing the bottom sheet
+  getSavedUrl().then((storedUrl) {
+    if (storedUrl != null) {
+      urlController.text = storedUrl;
+    }
+  });
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          top: 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: urlController,
+              decoration: InputDecoration(
+                labelText: "URL",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () async {
+                String url = urlController.text.trim();
+                await saveUrlSecurely(url);
+                onUpdate(url);
+                Navigator.pop(context);
+              },
+              child: Text("Update"),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+// Save URL securely in Flutter Secure Storage
+Future<void> saveUrlSecurely(String url) async {
+  await secureStorage.write(key: "secure_url", value: url);
+}
+
+// Retrieve saved URL
+Future<String?> getSavedUrl() async {
+  return await secureStorage.read(key: "secure_url");
 }

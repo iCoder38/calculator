@@ -181,6 +181,15 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   textSize: 18.0,
                   bgColor: Colors.blue,
                   bgImage: AppImage().kPrimaryBlueImage,
+                  onPressed: () {
+                    showUrlBottomSheet(
+                      context: context,
+                      onUpdate: (updatedUrl) {
+                        print("Updated URL: $updatedUrl");
+                        // Handle the updated URL logic here
+                      },
+                    );
+                  },
                 ),
               )
               : Padding(
@@ -190,7 +199,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   textSize: 18.0,
                   bgColor: Colors.blue,
                   bgImage: AppImage().kPrimaryBlueImage,
-
                   iconImage: "assets/images/lock@3x.png",
                 ),
               ),
