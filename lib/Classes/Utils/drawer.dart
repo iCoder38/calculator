@@ -166,7 +166,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SubscriptionTestScreen(),
+                        builder: (context) => UpgradeNowScreen(),
                       ),
                     );
                   },

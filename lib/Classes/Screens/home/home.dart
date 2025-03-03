@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
+import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -376,10 +377,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MathsScreen()),
-                    );
+                    if (_isSubscribed == true) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MathsScreen()),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => UpgradeNowScreen(),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     height: 70,
