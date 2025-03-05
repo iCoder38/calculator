@@ -21,9 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
   late StreamSubscription<List<PurchaseDetails>> _subscription;
   bool _isAvailable = false;
   bool _isSubscribed = false;
-  bool _available = false;
+  final bool _available = false;
   // storage
-  FlutterSecureStorage _storage = FlutterSecureStorage();
+  final FlutterSecureStorage _storage = FlutterSecureStorage();
   // screenloader
   bool screenLoader = true;
   @override

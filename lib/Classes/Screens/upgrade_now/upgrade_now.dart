@@ -5,11 +5,6 @@ import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:calculator/Classes/Screens/calculator/calculator.dart';
-import 'package:calculator/Classes/Screens/home/home.dart';
-import 'package:calculator/Classes/Utils/utils.dart';
-import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 
 class UpgradeNowScreen extends StatefulWidget {
   const UpgradeNowScreen({super.key});
