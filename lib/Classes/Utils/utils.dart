@@ -1,4 +1,6 @@
 // WIDGET
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,6 +20,19 @@ void customLog(dynamic message) {
 class AppConfig {
   String v = '0.0.1';
   String b = '1';
+
+  AppConfig() {
+    if (Platform.isAndroid) {
+      v = '1.0.4';
+      b = '4';
+    } else if (Platform.isIOS) {
+      v = '0.0.1';
+      b = '8';
+    } else {
+      v = '0.0.1';
+      b = '1';
+    }
+  }
 }
 
 class MathRapidApi {
@@ -26,8 +41,32 @@ class MathRapidApi {
 }
 
 class InAppProductId {
+  late String productId;
+
+  InAppProductId() {
+    if (Platform.isAndroid) {
+      productId = "ad_free_099";
+    } else if (Platform.isIOS) {
+      productId = "ad_free_099_v2";
+    } else {
+      productId = "ad_free_099";
+    }
+  }
+}
+
+/*class InAppProductId {
   String productId = "ad_free_099";
 }
+
+void checkPlatform() {
+  if (Platform.isAndroid) {
+    print("Running on Android");
+  } else if (Platform.isIOS) {
+    print("Running on iOS");
+  } else {
+    print("Running on an unsupported platform");
+  }
+}*/
 
 // FONTS
 class FontFamiltyNameUtils {
