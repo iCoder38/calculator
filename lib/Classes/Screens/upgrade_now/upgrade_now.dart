@@ -64,10 +64,10 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
               bgColor: Colors.blue,
               bgImage: AppImage().kPrimaryYellowImage,
               onPressed: () {
-                Navigator.pushReplacement(
+                /*Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
-                );
+                );*/
               },
             ),
           ),
@@ -144,46 +144,40 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
             ],
           ),
           Spacer(),
-          _products.isEmpty
-              ? Text("No Subscription Found")
-              : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children:
-                    _products.map((product) {
-                      return Column(
-                        children: [
-                          /*Text(
-                            product.title,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(product.description),*/
-                          /*Text(
-                            "Price: ${product.price}",
-                            style: TextStyle(color: Colors.green),
-                          ),
-                          SizedBox(height: 10),*/
-                          /*ElevatedButton(
-                            onPressed: () => onSubscribePressed(product),
-                            child: Text("Subscribe Now"),
-                          ),*/
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: CustomBannerButton(
-                              text: 'Upgrade now',
-                              textSize: 18.0,
-                              bgColor: Colors.blue,
-                              bgImage: AppImage().kPrimaryYellowImage,
-                              onPressed: () => onSubscribePressed(product),
-                            ),
-                          ),
-                          Divider(),
-                        ],
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_products.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CustomBannerButton(
+                    text: 'Upgrade now',
+                    textSize: 18.0,
+                    bgColor: Colors.blue,
+                    bgImage: AppImage().kPrimaryYellowImage,
+                    onPressed: () {
+                      customLog(
+                        "No subscription found, but upgrade button is still clickable.",
                       );
-                    }).toList(),
-              ),
+                      // You can also show a message or navigate to an info screen
+                    },
+                  ),
+                ),
+              ..._products.map((product) {
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: CustomBannerButton(
+                    text: 'Upgrade now',
+                    textSize: 18.0,
+                    bgColor: Colors.blue,
+                    bgImage: AppImage().kPrimaryYellowImage,
+                    onPressed: () => onSubscribePressed(product),
+                  ),
+                );
+              }).toList(),
+            ],
+          ),
+
           /*Padding(
             padding: const EdgeInsets.all(8.0),
             child: CustomBannerButton(
@@ -231,7 +225,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     );
     customLog(response);
     if (response.notFoundIDs.isNotEmpty) {
-      print("Subscription not found: ${response.notFoundIDs}");
+      customLog("Subscription not found: ${response.notFoundIDs}");
       return [];
     } else {
       return response.productDetails;
@@ -267,13 +261,14 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
 
   // listen
   void _listenToPurchaseUpdates() {
+    customLog("Listen");
     _iap.purchaseStream.listen((List<PurchaseDetails> purchases) {
       for (var purchase in purchases) {
         if (purchase.productID == InAppProductId().productId &&
             (purchase.status == PurchaseStatus.purchased ||
                 purchase.status == PurchaseStatus.restored)) {
           customLog("✅ Subscription detected in SubscriptionTestScreen!");
-          customLog("🎉 Subscription Successful!");
+          customLog("🎉 Subscription Successfull!");
           _pushToHomeScreen();
         } else if (purchase.status == PurchaseStatus.error) {
           customLog("❌ Subscription Failed: ${purchase.error}");

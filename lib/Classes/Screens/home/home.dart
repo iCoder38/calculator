@@ -5,9 +5,12 @@ import 'package:calculator/Classes/Screens/calculator/calculator.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -423,8 +426,66 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
+
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, bottom: 24.0),
+            child: Column(
+              // mainAxisAlignment: MainAxisAlignment.center,
+              // crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // SizedBox(height: 16),
+                RichText(
+                  textAlign: TextAlign.center,
+                  text: TextSpan(
+                    text: 'By verifying yourself, you agree to our ',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                    children: [
+                      TextSpan(
+                        text: 'Terms',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer:
+                            TapGestureRecognizer()
+                              ..onTap = () {
+                                _launchUrl(
+                                  "https://incognitocalculator.com/terms-%26-conditions",
+                                );
+                              },
+                      ),
+                      TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer:
+                            TapGestureRecognizer()
+                              ..onTap = () {
+                                _launchUrl(
+                                  "https://incognitocalculator.com/privacy-policy",
+                                );
+                              },
+                      ),
+                      TextSpan(text: '.'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
+  }
+
+  void _launchUrl(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }
