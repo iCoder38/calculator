@@ -25,12 +25,32 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
   List<ProductDetails> _products = [];
 
   String strPush = '0';
+
+  String subscriptionPrice = '0';
   @override
   void initState() {
     super.initState();
 
     _initializeBilling();
     _listenToPurchaseUpdates();
+    //
+    fetchProductDetails();
+  }
+
+  void fetchProductDetails() async {
+    final bool available = await InAppPurchase.instance.isAvailable();
+    if (!available) return;
+
+    Set<String> _kIds = {InAppProductId().productId};
+    final ProductDetailsResponse response = await InAppPurchase.instance
+        .queryProductDetails(_kIds);
+
+    if (response.notFoundIDs.isEmpty) {
+      ProductDetails product = response.productDetails.first;
+      customLog("Subscription Price: ${product.price}");
+      subscriptionPrice = product.price.toString();
+      setState(() {});
+    }
   }
 
   @override
@@ -59,7 +79,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: CustomBannerButton(
-              text: '1 Month [ \$0.99 per month ]',
+              text: '1 Month [ $subscriptionPrice ]',
               textSize: 18.0,
               bgColor: Colors.blue,
               bgImage: AppImage().kPrimaryYellowImage,
