@@ -41,9 +41,9 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     final bool available = await InAppPurchase.instance.isAvailable();
     if (!available) return;
 
-    Set<String> _kIds = {InAppProductId().productId};
+    Set<String> kIds = {InAppProductId().productId};
     final ProductDetailsResponse response = await InAppPurchase.instance
-        .queryProductDetails(_kIds);
+        .queryProductDetails(kIds);
 
     if (response.notFoundIDs.isEmpty) {
       ProductDetails product = response.productDetails.first;
@@ -194,7 +194,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
                     onPressed: () => onSubscribePressed(product),
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
 
