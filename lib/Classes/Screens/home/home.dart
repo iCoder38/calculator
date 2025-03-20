@@ -27,7 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // storage
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   // screenloader
-  bool screenLoader = true;
+  bool screenLoader = false;
   @override
   void initState() {
     super.initState();
