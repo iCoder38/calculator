@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
@@ -27,11 +28,21 @@ class _HomeScreenState extends State<HomeScreen> {
   // storage
   final FlutterSecureStorage _storage = FlutterSecureStorage();
   // screenloader
+  String storeInAppProductId = '';
   bool screenLoader = false;
   @override
   void initState() {
     super.initState();
-    //
+    // store id
+    Set<String> kIds = {InAppProductId().productId};
+    if (Platform.isAndroid) {
+      customLog("In app product id in Android ======> $kIds");
+      storeInAppProductId = kIds.toString();
+    } else if (Platform.isIOS) {
+      customLog("In app product id in iOS ======> $kIds");
+      storeInAppProductId = kIds.toString();
+    }
+
     /*_initializeBilling();
     _listenToPurchaseUpdates();
     checkSubscriptionStatus().then((isSubscribed) {
@@ -172,7 +183,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchProducts() async {
-    Set<String> kIds = {InAppProductId().productId};
+    Set<String> kIds = {storeInAppProductId};
+
+    if (Platform.isAndroid) {
+      customLog("In app product id in Android ======> $kIds");
+    } else if (Platform.isIOS) {
+      customLog("In app product id in iOS ======> $kIds");
+    }
+
     final ProductDetailsResponse response = await _inAppPurchase
         .queryProductDetails(kIds);
     if (response.notFoundIDs.isNotEmpty) {
@@ -204,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
     bool hasActiveSubscription = false;
 
     for (var purchase in purchases) {
-      if (purchase.productID == InAppProductId().productId) {
+      if (purchase.productID == storeInAppProductId) {
         if (purchase.status == PurchaseStatus.purchased ||
             purchase.status == PurchaseStatus.restored) {
           customLog("✅ Subscription is active!");

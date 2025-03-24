@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:calculator/Classes/Screens/home/home.dart';
 import 'package:calculator/Classes/Utils/drawer.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
@@ -5,6 +7,7 @@ import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpgradeNowScreen extends StatefulWidget {
   const UpgradeNowScreen({super.key});
@@ -19,7 +22,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
   // in app instance
   final InAppPurchase _iap = InAppPurchase.instance;
   // sb id
-  final Set<String> _kProductIds = {'ad_free_099'};
+  //  final Set<String> _kProductIds = {'ad_free_099'};
 
   bool _available = false;
   List<ProductDetails> _products = [];
@@ -42,6 +45,16 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     if (!available) return;
 
     Set<String> kIds = {InAppProductId().productId};
+
+    // in app
+    if (Platform.isAndroid) {
+      customLog("In app product id in Android ======> $kIds");
+      // storeInAppProductId = kIds.toString();
+    } else if (Platform.isIOS) {
+      customLog("In app product id in iOS ======> $kIds");
+      // storeInAppProductId = kIds.toString();
+    }
+
     final ProductDetailsResponse response = await InAppPurchase.instance
         .queryProductDetails(kIds);
 
@@ -164,24 +177,74 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
             ],
           ),
           Spacer(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Subscription: Premium Monthly Plan",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text("auto-renewable", style: TextStyle(color: Colors.white)),
+                Text(
+                  "Length: 1 Month [\$${0.99}]",
+                  style: TextStyle(color: Colors.white),
+                ),
+                Row(
+                  children: [
+                    TextButton(
+                      onPressed:
+                          () => launchUrl(
+                            Uri.parse(
+                              "https://incognitocalculator.com/privacy-policy",
+                            ),
+                          ),
+                      child: Text("Privacy Policy"),
+                    ),
+                    TextButton(
+                      onPressed:
+                          () => launchUrl(
+                            Uri.parse(
+                              "https://incognitocalculator.com/terms-%26-conditions",
+                            ),
+                          ),
+                      child: Text("Terms of Use"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (_products.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CustomBannerButton(
-                    text: 'Upgrade now',
-                    textSize: 18.0,
-                    bgColor: Colors.blue,
-                    bgImage: AppImage().kPrimaryYellowImage,
-                    onPressed: () {
-                      customLog(
-                        "No subscription found, but upgrade button is still clickable.",
-                      );
-                      // You can also show a message or navigate to an info screen
-                    },
-                  ),
+                CustomBannerButton(
+                  bgColor: Colors.blue,
+                  text: 'Upgrade Now',
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder:
+                          (_) => AlertDialog(
+                            title: Text('Subscription Not Ready'),
+                            content: Text(
+                              'The subscription is still being prepared. Please try again later.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text('OK'),
+                              ),
+                            ],
+                          ),
+                    );
+                  },
                 ),
               ..._products.map((product) {
                 return Padding(
@@ -230,7 +293,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     );
 
     if (response.notFoundIDs.isNotEmpty) {
-      customLog("Subscription not found: ${response.notFoundIDs}");
+      customLog("Subscription not found 2: ${response.notFoundIDs}");
     } else {
       setState(() {
         _products = response.productDetails;
@@ -239,18 +302,18 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     }
   }
 
-  Future<List<ProductDetails>> fetchSubscriptions() async {
+  /*Future<List<ProductDetails>> fetchSubscriptions() async {
     ProductDetailsResponse response = await _iap.queryProductDetails(
       _kProductIds,
     );
     customLog(response);
     if (response.notFoundIDs.isNotEmpty) {
-      customLog("Subscription not found: ${response.notFoundIDs}");
+      customLog("Subscription not found 3: ${response.notFoundIDs}");
       return [];
     } else {
       return response.productDetails;
     }
-  }
+  }*/
 
   void onSubscribePressed(ProductDetails product) async {
     bool success = await _buySubscription(product);
@@ -265,9 +328,9 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     customLog("🛒 _buySubscription() called for product: ${product.id}");
 
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    bool started = await _iap.buyConsumable(
+    bool started = await _iap.buyNonConsumable(
       purchaseParam: purchaseParam,
-      autoConsume: false,
+      // autoConsume: false,
     );
 
     if (!started) {
