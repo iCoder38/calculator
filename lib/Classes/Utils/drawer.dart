@@ -128,6 +128,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   text: 'Upgrade to ads free'.toUpperCase(),
                   textSize: 18.0,
                   bgColor: AppColor().kBlue,
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => UpgradeNowScreen(),
+                      ),
+                    );
+                  },
                 ),
               ),
 
