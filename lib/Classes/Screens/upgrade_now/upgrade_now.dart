@@ -37,17 +37,18 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     super.initState();
 
     // ios
-    iOS();
+    //iOS();
     // return;
-    _initializeBilling();
+
     _listenToPurchaseUpdates();
+    _initializeBilling();
     //
     fetchProductDetails();
   }
 
-  void iOS() async {
+  /*void iOS() async {
     final response = await InAppPurchase.instance.queryProductDetails(
-      {'premium_monthly_099_v2'}.toSet(),
+      {'per_month_099'}.toSet(),
     );
 
     if (response.notFoundIDs.isNotEmpty) {
@@ -59,7 +60,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
         print("✅ Product Found: ${response.productDetails}");
       }
     }
-  }
+  }*/
 
   // void fetchProductDetails() async {
   //   /*final response1 = await InAppPurchase.instance.queryProductDetails(
@@ -106,7 +107,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
       return;
     }
 
-    Set<String> kIds = {'premium_monthly_099_v2'}; // Hardcoded for now
+    Set<String> kIds = {'per_month_099'}; // Hardcoded for now
 
     if (Platform.isAndroid) {
       customLog("📱 Product ID for Android: $kIds");

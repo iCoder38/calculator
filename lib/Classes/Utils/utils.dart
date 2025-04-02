@@ -47,7 +47,7 @@ class InAppProductId {
     if (Platform.isAndroid) {
       productId = "ad_free_099";
     } else if (Platform.isIOS) {
-      productId = "premium_monthly_099_v2";
+      productId = "per_month_099";
     } else {
       productId = "ad_free_099";
     }

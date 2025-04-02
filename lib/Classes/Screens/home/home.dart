@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
+import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
@@ -404,10 +406,16 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(builder: (context) => MathsScreen()),
                       );
                     } else {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => UpgradeNowScreen(),
+                      //   ),
+                      // );
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => UpgradeNowScreen(),
+                          builder: (context) => IOSSubscriptionTestScreen(),
                         ),
                       );
                     }

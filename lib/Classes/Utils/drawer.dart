@@ -3,6 +3,7 @@
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
+import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/reusable/resuable.dart';
@@ -132,7 +133,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => UpgradeNowScreen(),
+                        builder: (context) => IOSSubscriptionTestScreen(),
                       ),
                     );
                   },
