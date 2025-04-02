@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 
@@ -28,8 +29,10 @@ class _IOSSubscriptionTestScreenState extends State<IOSSubscriptionTestScreen> {
   Future<void> _initialize() async {
     _available = await _iap.isAvailable();
     if (!_available) {
-      debugPrint("❌ IAP not available");
+      customLog("❌ IAP not available");
       return;
+    } else {
+      customLog("IAP Availaible");
     }
 
     final response = await _iap.queryProductDetails({_kProductId});
@@ -45,10 +48,12 @@ class _IOSSubscriptionTestScreenState extends State<IOSSubscriptionTestScreen> {
       'per_month_099',
     });
     print(
-      "Found: ${response.productDetails.length}, Not Found: ${response.notFoundIDs}",
+      "Found: ${response2.productDetails.length}, Not Found: ${response2.notFoundIDs}",
     );
 
     _subscription = _iap.purchaseStream.listen(_handlePurchaseUpdates);
+
+    // new
   }
 
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) {
