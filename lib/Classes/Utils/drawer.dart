@@ -133,7 +133,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => IOSSubscriptionTestScreen(),
+                        builder: (context) => UpgradeNowScreen(),
                       ),
                     );
                   },

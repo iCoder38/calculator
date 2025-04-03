@@ -46,60 +46,6 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     fetchProductDetails();
   }
 
-  /*void iOS() async {
-    final response = await InAppPurchase.instance.queryProductDetails(
-      {'per_month_099'}.toSet(),
-    );
-
-    if (response.notFoundIDs.isNotEmpty) {
-      if (kDebugMode) {
-        print("❌ Not Found: ${response.notFoundIDs}");
-      }
-    } else {
-      if (kDebugMode) {
-        print("✅ Product Found: ${response.productDetails}");
-      }
-    }
-  }*/
-
-  // void fetchProductDetails() async {
-  //   /*final response1 = await InAppPurchase.instance.queryProductDetails(
-  //     {'premium_monthly_099'}.toSet(),
-  //   );
-  //   customLog("Response 1: ========> ${response1.productDetails}");
-
-  //   for (var product in response1.productDetails) {
-  //     customLog("🟢 Found Product:");
-  //     customLog("ID: ${product.id}");
-  //     customLog("Title: ${product.title}");
-  //     customLog("Description: ${product.description}");
-  //     customLog("Price: ${product.price}");
-  //   }*/
-
-  //   final bool available = await InAppPurchase.instance.isAvailable();
-  //   if (!available) return;
-
-  //   Set<String> kIds = {InAppProductId().productId};
-
-  //   // in app
-  //   if (Platform.isAndroid) {
-  //     customLog("In app product id in Android ======> $kIds");
-  //     // storeInAppProductId = kIds.toString();
-  //   } else if (Platform.isIOS) {
-  //     customLog("In app product id in iOS ======> $kIds");
-  //     // storeInAppProductId = kIds.toString();
-  //   }
-
-  //   final ProductDetailsResponse response = await InAppPurchase.instance
-  //       .queryProductDetails(kIds);
-
-  //   if (response.notFoundIDs.isEmpty) {
-  //     ProductDetails product = response.productDetails.first;
-  //     customLog("Subscription Price: ${product.price}");
-  //     subscriptionPrice = product.price.toString();
-  //     setState(() {});
-  //   } else {}
-  // }
   void fetchProductDetails() async {
     final bool available = await InAppPurchase.instance.isAvailable();
     if (!available) {
@@ -107,7 +53,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
       return;
     }
 
-    Set<String> kIds = {'per_month_099'}; // Hardcoded for now
+    Set<String> kIds = {InAppProductId().productId}; // Hardcoded for now
 
     if (Platform.isAndroid) {
       customLog("📱 Product ID for Android: $kIds");
@@ -159,8 +105,9 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: CustomBannerButton(
-              text: '1 Month \$0.99',
-              // '1 Month [ $subscriptionPrice ]',
+              text:
+                  //'1 Month \$0.99',
+                  '1 Month [ $subscriptionPrice ]',
               textSize: 18.0,
               bgColor: Colors.blue,
               bgImage: AppImage().kPrimaryYellowImage,
@@ -251,8 +198,8 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  // "This is a 1-month auto-renewable subscription for $subscriptionPrice.",
-                  "This is a 1-month auto-renewable subscription for \$0.99.",
+                  "This is a 1-month auto-renewable subscription for $subscriptionPrice.",
+                  // "This is a 1-month auto-renewable subscription for \$0.99.",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -260,7 +207,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
                 ),
                 Text("auto-renewable", style: TextStyle(color: Colors.white)),
                 Text(
-                  "Length: 1 Month [\$${0.99}]",
+                  "Length: 1 Month [$subscriptionPrice]",
                   style: TextStyle(color: Colors.white),
                 ),
                 Row(

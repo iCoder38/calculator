@@ -13,7 +13,7 @@ class IOSSubscriptionTestScreen extends StatefulWidget {
 
 class _IOSSubscriptionTestScreenState extends State<IOSSubscriptionTestScreen> {
   final InAppPurchase _iap = InAppPurchase.instance;
-  final String _kProductId = 'per_month_099'; // iOS product ID
+  final String _kProductId = 'monthly_sub_099_v2'; // iOS product ID
 
   List<ProductDetails> _products = [];
   late StreamSubscription<List<PurchaseDetails>> _subscription;
@@ -45,7 +45,7 @@ class _IOSSubscriptionTestScreenState extends State<IOSSubscriptionTestScreen> {
     }
 
     final response2 = await InAppPurchase.instance.queryProductDetails({
-      'per_month_099',
+      'monthly_sub_099_v2',
     });
     print(
       "Found: ${response2.productDetails.length}, Not Found: ${response2.notFoundIDs}",

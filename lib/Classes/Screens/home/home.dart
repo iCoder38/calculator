@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:isolate';
+// import 'dart:isolate';
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
-import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
+// import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
@@ -28,7 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isSubscribed = false;
   final bool _available = false;
   // storage
-  final FlutterSecureStorage _storage = FlutterSecureStorage();
+  final FlutterSecureStorage storage = FlutterSecureStorage();
+
   // screenloader
   String storeInAppProductId = '';
   bool screenLoader = false;
@@ -40,34 +41,73 @@ class _HomeScreenState extends State<HomeScreen> {
     if (Platform.isAndroid) {
       customLog("In app product id in Android ======> $kIds");
       storeInAppProductId = kIds.toString();
+      final purchaseUpdated = _inAppPurchase.purchaseStream;
+      _subscription = purchaseUpdated.listen(
+        (purchases) {
+          _handlePurchaseUpdates(purchases);
+        },
+        onDone: () {
+          _subscription.cancel();
+        },
+        onError: (error) {
+          // Handle error here.
+          customLog(error);
+        },
+      );
+      _initialize();
     } else if (Platform.isIOS) {
       customLog("In app product id in iOS ======> $kIds");
       storeInAppProductId = kIds.toString();
+      _listenToPurchaseUpdates();
     }
+  }
 
-    /*_initializeBilling();
-    _listenToPurchaseUpdates();
-    checkSubscriptionStatus().then((isSubscribed) {
-      setState(() {
-        _isSubscribed = isSubscribed;
-      });
-    });*/
-    final purchaseUpdated = _inAppPurchase.purchaseStream;
+  void _listenToPurchaseUpdates() {
+    final Stream<List<PurchaseDetails>> purchaseUpdated =
+        InAppPurchase.instance.purchaseStream;
+
     _subscription = purchaseUpdated.listen(
-      (purchases) {
-        _handlePurchaseUpdates(purchases);
+      (purchases) async {
+        for (var purchase in purchases) {
+          if (purchase.productID == InAppProductId().productId) {
+            if (purchase.status == PurchaseStatus.purchased ||
+                purchase.status == PurchaseStatus.restored) {
+              if (!purchase.pendingCompletePurchase) {
+                InAppPurchase.instance.completePurchase(purchase);
+              }
+
+              setState(() {
+                _isSubscribed = true;
+              });
+
+              customLog("🎉 Subscription is active in IOS!");
+
+              subscribed(true);
+              await storage.write(key: 'isSubscribed', value: 'true');
+
+              // Complete the purchase
+              if (purchase.pendingCompletePurchase) {
+                _inAppPurchase.completePurchase(purchase);
+              }
+
+              // hasActiveSubscription = true;
+            } else {
+              setState(() async {
+                _isSubscribed = false;
+                subscribed(true);
+                await storage.write(key: 'isSubscribed', value: 'true');
+              });
+            }
+          }
+        }
       },
       onDone: () {
         _subscription.cancel();
       },
       onError: (error) {
-        // Handle error here.
-        customLog(error);
+        customLog("❌ Purchase stream error: $error");
       },
     );
-    _initialize();
-    //
-    // _checkSubscriptionStatus();
   }
 
   @override
@@ -94,86 +134,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     _initialize();
   }
-
-  /*Future<void> _initializeBilling() async {
-    // Check if Google Play Billing is available
-    _available = await _inAppPurchase.isAvailable();
-    if (!_available) {
-      customLog("❌ Google Play Billing is NOT available.");
-      return;
-    }
-
-    // Query available subscriptions
-    Set<String> productIds = {
-      InAppProductId().productId, // Ensure this ID matches Play Console
-    };
-
-    ProductDetailsResponse response = await _inAppPurchase.queryProductDetails(
-      productIds,
-    );
-
-    if (response.notFoundIDs.isNotEmpty) {
-      customLog("❌ Subscription not found: ${response.notFoundIDs}");
-    } else {
-      customLog("subs");
-      setState(() {
-        // _products = response.productDetails;
-        customLog(response.productDetails);
-      });
-      // print("✅ Products found: $_products");
-      customLog("✅ Products found: ${response.productDetails}");
-    }
-  }
-
-  void _listenToPurchaseUpdates() {
-    customLog("_listenToPurchaseUpdates");
-    _inAppPurchase.purchaseStream.listen((List<PurchaseDetails> purchases) {
-      for (var purchase in purchases) {
-        if (purchase.productID == InAppProductId().productId) {
-          if (purchase.status == PurchaseStatus.purchased ||
-              purchase.status == PurchaseStatus.restored) {
-            customLog("✅ Subscription Activated!");
-
-            // Unlock premium content here
-            setState(() {
-              _isSubscribed = true;
-            });
-
-            // Complete the purchase
-            if (purchase.pendingCompletePurchase) {
-              _inAppPurchase.completePurchase(purchase);
-            }
-          } else if (purchase.status == PurchaseStatus.error) {
-            customLog("❌ Subscription Failed: ${purchase.error}");
-          }
-        }
-      }
-    });
-  }
-
-  Future<bool> checkSubscriptionStatus() async {
-    final bool available = await _iap.isAvailable();
-    if (!available) {
-      print("❌ Google Play Billing is NOT available.");
-      return false;
-    }
-
-    // Query past purchases
-    final List<PurchaseDetails> pastPurchases =
-        await _inAppPurchase.queryPastPurchases();
-
-    for (var purchase in pastPurchases) {
-      if (purchase.productID == InAppProductId().productId &&
-          (purchase.status == PurchaseStatus.purchased ||
-              purchase.status == PurchaseStatus.restored)) {
-        print("✅ User has an active subscription!");
-        return true;
-      }
-    }
-
-    print("❌ User's subscription is NOT active.");
-    return false;
-  }*/
 
   Future<void> _initialize() async {
     _isAvailable = await _inAppPurchase.isAvailable();
@@ -211,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
     await _inAppPurchase.restorePurchases();
 
     // Wait for restored purchases to be processed
-    await Future.delayed(Duration(seconds: 2));
+    await Future.delayed(Duration(seconds: 1));
 
     // Check if subscription was restored
     if (!_isSubscribed) {
@@ -220,14 +180,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
-    final FlutterSecureStorage storage = FlutterSecureStorage();
     bool hasActiveSubscription = false;
 
     for (var purchase in purchases) {
       if (purchase.productID == storeInAppProductId) {
         if (purchase.status == PurchaseStatus.purchased ||
             purchase.status == PurchaseStatus.restored) {
-          customLog("✅ Subscription is active!");
+          customLog("✅ Subscription is active! in ${Platform.isIOS}");
 
           setState(() {
             _isSubscribed = true;
@@ -261,56 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
       await storage.write(key: 'isSubscribed', value: 'false');
     }
   }
-
-  // #2
-  /// **Single Function to Check Subscription**
-  /*Future<void> _checkSubscriptionStatus() async {
-    // 1️⃣ Check if Google Play Billing is available
-    _isAvailable = await _inAppPurchase.isAvailable();
-    if (!_isAvailable) {
-      customLog("❌ Google Play Billing is NOT available.");
-      return;
-    }
-
-    // 2️⃣ Restore purchases to check past subscriptions
-    await _inAppPurchase.restorePurchases();
-
-    // 3️⃣ Wait for purchases to update
-    await Future.delayed(Duration(milliseconds: 400));
-
-    // 4️⃣ Listen for past and restored purchases
-    bool hasActiveSubscription = false;
-    final subscription = _inAppPurchase.purchaseStream.listen((
-      List<PurchaseDetails> purchases,
-    ) {
-      for (var purchase in purchases) {
-        if (purchase.productID == InAppProductId().productId &&
-            (purchase.status == PurchaseStatus.purchased ||
-                purchase.status == PurchaseStatus.restored)) {
-          customLog("✅ User has an active subscription!");
-          hasActiveSubscription = true;
-        }
-      }
-    });
-
-    // 5️⃣ Wait for stream to process and cancel listener
-    await Future.delayed(Duration(milliseconds: 400));
-    await subscription.cancel();
-
-    // 6️⃣ Save and update subscription status
-    await _storage.write(
-      key: 'isSubscribed',
-      value: hasActiveSubscription.toString(),
-    );
-    setState(() {
-      _isSubscribed = hasActiveSubscription;
-      screenLoader = false;
-    });
-
-    customLog(
-      _isSubscribed ? "✅ User is subscribed." : "❌ User is NOT subscribed.",
-    );
-  }*/
 
   subscribed(bool value) async {
     final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -406,18 +315,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(builder: (context) => MathsScreen()),
                       );
                     } else {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => UpgradeNowScreen(),
-                      //   ),
-                      // );
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => IOSSubscriptionTestScreen(),
+                          builder: (context) => UpgradeNowScreen(),
                         ),
                       );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => IOSSubscriptionTestScreen(),
+                      //   ),
+                      // );
                     }
                   },
                   child: Container(
