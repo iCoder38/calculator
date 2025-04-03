@@ -8,6 +8,7 @@ import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
@@ -42,31 +43,50 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
   void initState() {
     super.initState();
 
-    if (Platform.isIOS) {
-      _completePendingTransactions(); // ✅ Call FIRST
-    }
+    // if (Platform.isIOS) {
+    //   _completePendingTransactions(); // ✅ Call FIRST
+    // }
 
-    _listenToPurchaseUpdates(context);
-    _initializeBilling();
-    fetchProductDetails();
-    _restorePastPurchases();
+    // _listenToPurchaseUpdates();
+    // _initializeBilling();
+    // fetchProductDetails();
+    // _restorePastPurchases();
+    _completePendingTransactions(); // Clear pending FIRST
+    _listenToPurchaseUpdates(); // THEN listen updates
+    _initializeBilling(); // Initialize billing
+    fetchProductDetails(); // Load subscription details
   }
 
   Future<void> _completePendingTransactions() async {
     if (Platform.isIOS) {
-      customLog("called _completePendingTransactions");
-      final iosPlatformAddition =
-          _iap.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+      customLog("🚀 Completing Pending Transactions (iOS)...");
 
-      await iosPlatformAddition.setDelegate(MyPaymentQueueDelegate());
+      final transactions = await SKPaymentQueueWrapper().transactions();
+      for (var transaction in transactions) {
+        customLog(
+          "🔍 Found pending transaction: ${transaction.payment.productIdentifier} (${transaction.transactionState})",
+        );
 
-      // Correct method to restore purchases
-      await _iap.restorePurchases(); // ✅ Call restorePurchases on _iap directly
-      customLog("✅ Restore purchases called to clear pending transactions");
+        if (transaction.transactionState ==
+                SKPaymentTransactionStateWrapper.purchased ||
+            transaction.transactionState ==
+                SKPaymentTransactionStateWrapper.restored) {
+          await SKPaymentQueueWrapper().finishTransaction(transaction);
+          customLog(
+            "✅ Transaction ${transaction.payment.productIdentifier} completed!",
+          );
+        } else if (transaction.transactionState ==
+            SKPaymentTransactionStateWrapper.failed) {
+          await SKPaymentQueueWrapper().finishTransaction(transaction);
+          customLog(
+            "❌ Transaction ${transaction.payment.productIdentifier} failed and cleared.",
+          );
+        }
+      }
     }
   }
 
-  Future<void> _checkPendingPurchases() async {
+  /*Future<void> _checkPendingPurchases() async {
     final Stream<List<PurchaseDetails>> purchaseUpdated = _iap.purchaseStream;
 
     purchaseUpdated.listen((List<PurchaseDetails> purchases) {
@@ -96,7 +116,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
         }
       });
     });
-  }
+  }*/
 
   void fetchProductDetails() async {
     final bool available = await InAppPurchase.instance.isAvailable();
@@ -299,15 +319,6 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
                       bgColor: Colors.blue,
                       onPressed: () {
                         if (_products.isEmpty) {
-                          // ✅ Push a full-screen loading/placeholder screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) =>
-                                      const LoadingSubscriptionScreen(),
-                            ),
-                          );
                         } else {
                           // ✅ Initiate purchase when subscription is loaded
                           onSubscribePressed(_products.first);
@@ -362,6 +373,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
   }
 
   void onSubscribePressed(ProductDetails product) async {
+    HapticFeedback.mediumImpact();
     if (_isPurchasing) return;
     _isPurchasing = true;
 
@@ -406,42 +418,41 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
 
   // listen
 
-  void _listenToPurchaseUpdates(context) {
-    _iap.purchaseStream.listen((List<PurchaseDetails> purchases) {
+  void _listenToPurchaseUpdates() {
+    _iap.purchaseStream.listen((List<PurchaseDetails> purchases) async {
       for (var purchase in purchases) {
         customLog("🔔 Purchase status: ${purchase.status}");
-        if (purchase.status == PurchaseStatus.purchased) {
-          if (purchase.pendingCompletePurchase) {
-            customLog("✅ Completing purchase: ${purchase.productID}");
-            InAppPurchase.instance.completePurchase(purchase);
-          }
-          _pushToHomeScreen();
-        } /* else if (purchase.status == PurchaseStatus.restored) {
-          customLog("❌ Purchase Error: ${purchase.error}");
-          if (purchase.pendingCompletePurchase) {
-            customLog("✅ Completing purchase: ${purchase.productID}");
-            InAppPurchase.instance.completePurchase(purchase);
-          }
-          Navigator.pop(context);
-        }*/ else if (purchase.status == PurchaseStatus.error) {
-          customLog("❌ Purchase Error: ${purchase.error}");
-          if (purchase.pendingCompletePurchase) {
-            InAppPurchase.instance.completePurchase(purchase);
-          }
-        } else if (purchase.status == PurchaseStatus.pending) {
-          customLog("⏳ Purchase pending...");
-          showLoadingUI(context, "message");
-        } else if (purchase.status == PurchaseStatus.canceled) {
-          customLog("❗️ Purchase canceled by user.");
-          if (purchase.pendingCompletePurchase) {
-            InAppPurchase.instance.completePurchase(purchase);
-          }
+
+        switch (purchase.status) {
+          case PurchaseStatus.purchased:
+          case PurchaseStatus.restored:
+            if (purchase.pendingCompletePurchase) {
+              customLog("✅ Completing purchase: ${purchase.productID}");
+              await _iap.completePurchase(purchase);
+            }
+            _pushToHomeScreen();
+            break;
+
+          case PurchaseStatus.pending:
+            customLog("⏳ Purchase pending...");
+            showLoadingUI(context, "message");
+            break;
+
+          case PurchaseStatus.canceled:
+          case PurchaseStatus.error:
+            customLog(
+              "❌ Purchase canceled or error: ${purchase.error?.message}",
+            );
+            if (purchase.pendingCompletePurchase) {
+              await _iap.completePurchase(purchase);
+            }
+            break;
         }
       }
     });
   }
 
-  Future<void> _restorePastPurchases() async {
+  /*Future<void> _restorePastPurchases() async {
     final bool available = await _iap.isAvailable();
     if (!available) return;
 
@@ -449,7 +460,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
       await _iap
           .restorePurchases(); // This triggers purchaseStream with past purchases.
     }
-  }
+  }*/
 
   void _pushToHomeScreen() {
     if (strPush == '0') {
