@@ -1,18 +1,24 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 // import 'dart:isolate';
 
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
+import 'package:calculator/Classes/Screens/home/subscription_checker.dart';
 // import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
+import 'package:calculator/Classes/Utils/reusable/resuable.dart';
 import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // screenloader
   String storeInAppProductId = '';
   bool screenLoader = false;
+
   @override
   void initState() {
     super.initState();
@@ -58,11 +65,86 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (Platform.isIOS) {
       customLog("In app product id in iOS ======> $kIds");
       storeInAppProductId = kIds.toString();
-      _listenToPurchaseUpdates();
+      // _listenToPurchaseUpdates();
     }
   }
 
-  void _listenToPurchaseUpdates() {
+  ///
+  /*checkSubscription() async {
+    bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
+
+    if (isSubscribed) {
+      customLog("✅ User is subscribed");
+
+     
+    } else {
+      customLog("🚫 User is not subscribed");
+      
+    }
+  }*/
+
+  void checkSubStatus(context, type) async {
+    showLoadingUI(context, "");
+    bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
+
+    if (isSubscribed) {
+      customLog("✅ YES — User is subscribed");
+      setState(() {
+        _isSubscribed = true;
+      });
+      subscribed(true);
+      await storage.write(key: 'isSubscribed', value: 'true');
+      Navigator.pop(context);
+      if (type == '1') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CalculatorScreen()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => MathsScreen()),
+        );
+      }
+    } else {
+      customLog("🚫 NO — User is not subscribed");
+      setState(() {
+        _isSubscribed = false;
+      });
+      subscribed(false);
+      await storage.write(key: 'isSubscribed', value: 'false');
+      Navigator.pop(context);
+      if (type == '1') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => CalculatorScreen()),
+        );
+      } else {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
+        );
+      }
+    }
+  }
+
+  /*Future<String?> _getReceiptData() async {
+    if (!Platform.isIOS) return null;
+
+    // Restore purchases to refresh receipts
+    await InAppPurchase.instance.restorePurchases();
+
+    // Get the LATEST purchase from the stream
+    final List<PurchaseDetails> purchases =
+        await InAppPurchase.instance.purchaseStream.first;
+
+    if (purchases.isEmpty) return null;
+
+    // Return the most recent receipt
+    return purchases.last.verificationData.serverVerificationData;
+  }*/
+
+  /*void _listenToPurchaseUpdates() {
     final Stream<List<PurchaseDetails>> purchaseUpdated =
         InAppPurchase.instance.purchaseStream;
 
@@ -76,12 +158,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 InAppPurchase.instance.completePurchase(purchase);
               }
 
-              setState(() {
-                _isSubscribed = true;
-              });
+              
 
               customLog("🎉 Subscription is active in IOS!");
 
+              setState(() {
+                _isSubscribed = true;
+              });
               subscribed(true);
               await storage.write(key: 'isSubscribed', value: 'true');
 
@@ -102,13 +185,14 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       },
       onDone: () {
+        customLog("Cancelled");
         _subscription.cancel();
       },
       onError: (error) {
         customLog("❌ Purchase stream error: $error");
       },
     );
-  }
+  }*/
 
   @override
   void dispose() {
@@ -265,12 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16.0),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CalculatorScreen(),
-                      ),
-                    );
+                    checkSubStatus(context, '1');
                   },
                   child: Container(
                     height: 70,
@@ -308,26 +387,8 @@ class _HomeScreenState extends State<HomeScreen> {
               : Padding(
                 padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
                 child: GestureDetector(
-                  onTap: () {
-                    if (_isSubscribed == true) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MathsScreen()),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => UpgradeNowScreen(),
-                        ),
-                      );
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) => IOSSubscriptionTestScreen(),
-                      //   ),
-                      // );
-                    }
+                  onTap: () async {
+                    checkSubStatus(context, '2');
                   },
                   child: Container(
                     height: 70,

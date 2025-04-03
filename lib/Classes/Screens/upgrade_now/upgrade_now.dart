@@ -9,6 +9,8 @@ import 'package:calculator/Classes/Utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UpgradeNowScreen extends StatefulWidget {
@@ -32,18 +34,68 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
   String strPush = '0';
 
   String subscriptionPrice = '0';
+
+  // is purchasing
+  bool _isPurchasing = false;
+
   @override
   void initState() {
     super.initState();
 
-    // ios
-    //iOS();
-    // return;
+    if (Platform.isIOS) {
+      _completePendingTransactions(); // ✅ Call FIRST
+    }
 
-    _listenToPurchaseUpdates();
+    _listenToPurchaseUpdates(context);
     _initializeBilling();
-    //
     fetchProductDetails();
+    _restorePastPurchases();
+  }
+
+  Future<void> _completePendingTransactions() async {
+    if (Platform.isIOS) {
+      customLog("called _completePendingTransactions");
+      final iosPlatformAddition =
+          _iap.getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
+
+      await iosPlatformAddition.setDelegate(MyPaymentQueueDelegate());
+
+      // Correct method to restore purchases
+      await _iap.restorePurchases(); // ✅ Call restorePurchases on _iap directly
+      customLog("✅ Restore purchases called to clear pending transactions");
+    }
+  }
+
+  Future<void> _checkPendingPurchases() async {
+    final Stream<List<PurchaseDetails>> purchaseUpdated = _iap.purchaseStream;
+
+    purchaseUpdated.listen((List<PurchaseDetails> purchases) {
+      purchases.forEach((purchase) async {
+        customLog(
+          "🔔 Checking purchase status: ${purchase.productID} - ${purchase.status}",
+        );
+
+        if (purchase.pendingCompletePurchase) {
+          await _iap.completePurchase(purchase);
+          customLog("✅ Completed pending purchase for: ${purchase.productID}");
+        }
+
+        switch (purchase.status) {
+          case PurchaseStatus.purchased:
+          case PurchaseStatus.restored:
+            _pushToHomeScreen();
+            break;
+          case PurchaseStatus.error:
+            customLog("❌ Error completing purchase: ${purchase.error}");
+            break;
+          case PurchaseStatus.canceled:
+            customLog("❗️ User canceled the purchase: ${purchase.productID}");
+            break;
+          default:
+            break;
+        }
+      });
+    });
   }
 
   void fetchProductDetails() async {
@@ -56,9 +108,9 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     Set<String> kIds = {InAppProductId().productId}; // Hardcoded for now
 
     if (Platform.isAndroid) {
-      customLog("📱 Product ID for Android: $kIds");
+      // customLog("📱 Product ID for Android: $kIds");
     } else if (Platform.isIOS) {
-      customLog("📱 Product ID for iOS: $kIds");
+      // customLog("📱 Product ID for iOS: $kIds");
     }
 
     final ProductDetailsResponse response = await InAppPurchase.instance
@@ -66,11 +118,11 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
 
     if (response.notFoundIDs.isEmpty) {
       for (ProductDetails product in response.productDetails) {
-        customLog("✅ Found Product:");
+        /*customLog("✅ Found Product:");
         customLog("ID: ${product.id}");
         customLog("Title: ${product.title}");
         customLog("Description: ${product.description}");
-        customLog("Price: ${product.price}");
+        customLog("Price: ${product.price}");*/
       }
       subscriptionPrice = response.productDetails.first.price.toString();
       setState(() {});
@@ -111,12 +163,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
               textSize: 18.0,
               bgColor: Colors.blue,
               bgImage: AppImage().kPrimaryYellowImage,
-              onPressed: () {
-                /*Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
-                );*/
-              },
+              onPressed: () {},
             ),
           ),
           SizedBox(height: 40),
@@ -239,29 +286,6 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              /*if (_products.isEmpty)
-                CustomBannerButton(
-                  bgColor: Colors.blue,
-                  text: 'Upgrade Now',
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder:
-                          (_) => AlertDialog(
-                            title: Text('Subscription Not Ready'),
-                            content: Text(
-                              'The subscription is still being prepared. Please try again later.',
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text('OK'),
-                              ),
-                            ],
-                          ),
-                    );
-                  },
-                ),*/
               if (_products.isEmpty)
                 Column(
                   children: [
@@ -306,17 +330,6 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
               }),
             ],
           ),
-
-          /*Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CustomBannerButton(
-              text: 'Upgrade now',
-              textSize: 18.0,
-              bgColor: Colors.blue,
-              bgImage: AppImage().kPrimaryYellowImage,
-              // onPressed: () => onSubscribePressed(product),
-            ),
-          ),*/
         ],
       ),
     );
@@ -344,66 +357,98 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
       setState(() {
         _products = response.productDetails;
       });
-      customLog("Products found: $_products");
+      // customLog("Products found: $_products");
     }
   }
 
-  /*Future<List<ProductDetails>> fetchSubscriptions() async {
-    ProductDetailsResponse response = await _iap.queryProductDetails(
-      _kProductIds,
-    );
-    customLog(response);
-    if (response.notFoundIDs.isNotEmpty) {
-      customLog("Subscription not found 3: ${response.notFoundIDs}");
-      return [];
-    } else {
-      return response.productDetails;
-    }
-  }*/
-
   void onSubscribePressed(ProductDetails product) async {
+    if (_isPurchasing) return;
+    _isPurchasing = true;
+
+    showLoadingUI(context, "Processing your purchase...");
+
     bool success = await _buySubscription(product);
+
+    Navigator.pop(context); // Close loading UI exactly once
+
     if (success) {
-      customLog("🎉 Subscription Successful!");
+      customLog("🎉 Subscription initiated successfully!");
     } else {
-      customLog("❌ Subscription Failed!");
+      customLog("❌ Subscription initiation failed!");
+      // Optionally, show a user-friendly alert here
     }
+
+    _isPurchasing = false;
   }
 
   Future<bool> _buySubscription(ProductDetails product) async {
     customLog("🛒 _buySubscription() called for product: ${product.id}");
 
-    final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    bool started = await _iap.buyNonConsumable(
-      purchaseParam: purchaseParam,
-      // autoConsume: false,
-    );
+    final PurchaseParam param = PurchaseParam(productDetails: product);
+    bool started = false;
+
+    if (Platform.isIOS) {
+      started = await _iap.buyNonConsumable(purchaseParam: param);
+    } else {
+      started = await _iap.buyConsumable(
+        purchaseParam: param,
+        autoConsume: false,
+      );
+    }
 
     if (!started) {
       customLog("❌ Purchase process did not start!");
       return false;
     }
 
-    // ✅ No need to listen to purchaseStream here, it’s already being handled in initState()
     return true;
   }
 
   // listen
-  void _listenToPurchaseUpdates() {
-    customLog("Listen");
+
+  void _listenToPurchaseUpdates(context) {
     _iap.purchaseStream.listen((List<PurchaseDetails> purchases) {
       for (var purchase in purchases) {
-        if (purchase.productID == InAppProductId().productId &&
-            (purchase.status == PurchaseStatus.purchased ||
-                purchase.status == PurchaseStatus.restored)) {
-          customLog("✅ Subscription detected in SubscriptionTestScreen!");
-          customLog("🎉 Subscription Successfull!");
+        customLog("🔔 Purchase status: ${purchase.status}");
+        if (purchase.status == PurchaseStatus.purchased) {
+          if (purchase.pendingCompletePurchase) {
+            customLog("✅ Completing purchase: ${purchase.productID}");
+            InAppPurchase.instance.completePurchase(purchase);
+          }
           _pushToHomeScreen();
-        } else if (purchase.status == PurchaseStatus.error) {
-          customLog("❌ Subscription Failed: ${purchase.error}");
+        } /* else if (purchase.status == PurchaseStatus.restored) {
+          customLog("❌ Purchase Error: ${purchase.error}");
+          if (purchase.pendingCompletePurchase) {
+            customLog("✅ Completing purchase: ${purchase.productID}");
+            InAppPurchase.instance.completePurchase(purchase);
+          }
+          Navigator.pop(context);
+        }*/ else if (purchase.status == PurchaseStatus.error) {
+          customLog("❌ Purchase Error: ${purchase.error}");
+          if (purchase.pendingCompletePurchase) {
+            InAppPurchase.instance.completePurchase(purchase);
+          }
+        } else if (purchase.status == PurchaseStatus.pending) {
+          customLog("⏳ Purchase pending...");
+          showLoadingUI(context, "message");
+        } else if (purchase.status == PurchaseStatus.canceled) {
+          customLog("❗️ Purchase canceled by user.");
+          if (purchase.pendingCompletePurchase) {
+            InAppPurchase.instance.completePurchase(purchase);
+          }
         }
       }
     });
+  }
+
+  Future<void> _restorePastPurchases() async {
+    final bool available = await _iap.isAvailable();
+    if (!available) return;
+
+    if (Platform.isIOS) {
+      await _iap
+          .restorePurchases(); // This triggers purchaseStream with past purchases.
+    }
   }
 
   void _pushToHomeScreen() {
@@ -416,147 +461,18 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     }
   }
 }
-/*
-import 'package:calculator/Classes/Screens/calculator/calculator.dart';
-import 'package:calculator/Classes/Screens/home/home.dart';
-import 'package:calculator/Classes/Utils/utils.dart';
-import 'package:flutter/material.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 
-class SubscriptionTestScreen extends StatefulWidget {
-  const SubscriptionTestScreen({super.key});
-
+class MyPaymentQueueDelegate extends SKPaymentQueueDelegateWrapper {
   @override
-  _SubscriptionTestScreenState createState() => _SubscriptionTestScreenState();
-}
-
-class _SubscriptionTestScreenState extends State<SubscriptionTestScreen> {
-  final InAppPurchase _iap = InAppPurchase.instance;
-  bool _available = false;
-  List<ProductDetails> _products = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeBilling();
-    _listenToPurchaseUpdates();
-  }
-
-  Future<void> _initializeBilling() async {
-    // Check if Google Play Billing is available
-    _available = await _iap.isAvailable();
-    if (!_available) {
-      customLog("Google Play Billing is NOT available.");
-      return;
-    }
-
-    // Query available subscriptions
-    Set<String> productIds = {
-      InAppProductId().productId,
-    }; // Replace with your Product ID
-    ProductDetailsResponse response = await _iap.queryProductDetails(
-      productIds,
-    );
-
-    if (response.notFoundIDs.isNotEmpty) {
-      customLog("Subscription not found: ${response.notFoundIDs}");
-    } else {
-      setState(() {
-        _products = response.productDetails;
-      });
-      customLog("Products found: $_products");
-    }
-  }
-
-  void onSubscribePressed(ProductDetails product) async {
-    bool success = await _buySubscription(product);
-    if (success) {
-      customLog("🎉 Subscription Successful!");
-    } else {
-      customLog("❌ Subscription Failed!");
-    }
-  }
-
-  Future<bool> _buySubscription(ProductDetails product) async {
-    customLog("🛒 _buySubscription() called for product: ${product.id}");
-
-    final PurchaseParam purchaseParam = PurchaseParam(productDetails: product);
-    bool started = await _iap.buyConsumable(
-      purchaseParam: purchaseParam,
-      autoConsume: false,
-    );
-
-    if (!started) {
-      customLog("❌ Purchase process did not start!");
-      return false;
-    }
-
-    // ✅ No need to listen to purchaseStream here, it’s already being handled in initState()
+  bool shouldContinueTransaction(
+    SKPaymentTransactionWrapper transaction,
+    SKStorefrontWrapper storefront,
+  ) {
     return true;
   }
 
-  // listen
-  void _listenToPurchaseUpdates() {
-    _iap.purchaseStream.listen((List<PurchaseDetails> purchases) {
-      for (var purchase in purchases) {
-        if (purchase.productID == InAppProductId().productId &&
-            (purchase.status == PurchaseStatus.purchased ||
-                purchase.status == PurchaseStatus.restored)) {
-          customLog("✅ Subscription detected in SubscriptionTestScreen!");
-          customLog("🎉 Subscription Successful!");
-          _pushToHomeScreen();
-        } else if (purchase.status == PurchaseStatus.error) {
-          customLog("❌ Subscription Failed: ${purchase.error}");
-        }
-      }
-    });
-  }
-
-  void _pushToHomeScreen() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text("Subscription Test")),
-      body: Center(
-        child:
-            _products.isEmpty
-                ? Text("No Subscription Found")
-                : Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children:
-                      _products.map((product) {
-                        return Column(
-                          children: [
-                            Text(
-                              product.title,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Text(product.description),
-                            Text(
-                              "Price: ${product.price}",
-                              style: TextStyle(color: Colors.green),
-                            ),
-                            SizedBox(height: 10),
-                            ElevatedButton(
-                              onPressed: () => onSubscribePressed(product),
-                              child: Text("Subscribe Now"),
-                            ),
-                            Divider(),
-                          ],
-                        );
-                      }).toList(),
-                ),
-      ),
-    );
+  bool shouldShowPriceConsent() {
+    return false;
   }
 }
-*/

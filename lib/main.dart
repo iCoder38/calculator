@@ -14,3 +14,9 @@ void main() async {
 
   runApp(MaterialApp(debugShowCheckedModeBanner: false, home: HomeScreen()));
 }
+
+// in-app purchase key
+// 7697FFKGM4
+
+// b934ad85e17c41ffa2cf045740cfdd10
+// 76530cc572664bf793437adddfcf7d3b
