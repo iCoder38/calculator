@@ -141,7 +141,7 @@ Future<String?> getSavedUrl() async {
 
 void showLoadingUI(BuildContext context, String message) async {
   await showDialog(
-    barrierDismissible: true,
+    barrierDismissible: false,
     context: context,
     builder: (BuildContext context) {
       return Material(

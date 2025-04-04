@@ -86,38 +86,6 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     }
   }
 
-  /*Future<void> _checkPendingPurchases() async {
-    final Stream<List<PurchaseDetails>> purchaseUpdated = _iap.purchaseStream;
-
-    purchaseUpdated.listen((List<PurchaseDetails> purchases) {
-      purchases.forEach((purchase) async {
-        customLog(
-          "🔔 Checking purchase status: ${purchase.productID} - ${purchase.status}",
-        );
-
-        if (purchase.pendingCompletePurchase) {
-          await _iap.completePurchase(purchase);
-          customLog("✅ Completed pending purchase for: ${purchase.productID}");
-        }
-
-        switch (purchase.status) {
-          case PurchaseStatus.purchased:
-          case PurchaseStatus.restored:
-            _pushToHomeScreen();
-            break;
-          case PurchaseStatus.error:
-            customLog("❌ Error completing purchase: ${purchase.error}");
-            break;
-          case PurchaseStatus.canceled:
-            customLog("❗️ User canceled the purchase: ${purchase.productID}");
-            break;
-          default:
-            break;
-        }
-      });
-    });
-  }*/
-
   void fetchProductDetails() async {
     final bool available = await InAppPurchase.instance.isAvailable();
     if (!available) {
@@ -377,11 +345,11 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     if (_isPurchasing) return;
     _isPurchasing = true;
 
-    showLoadingUI(context, "Processing your purchase...");
+    // showLoadingUI(context, "Processing your purchase...");
 
     bool success = await _buySubscription(product);
 
-    Navigator.pop(context); // Close loading UI exactly once
+    // Navigator.pop(context);
 
     if (success) {
       customLog("🎉 Subscription initiated successfully!");
@@ -439,6 +407,12 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
             break;
 
           case PurchaseStatus.canceled:
+            customLog("❌ Purchase Cancelled...");
+            if (purchase.pendingCompletePurchase) {
+              await _iap.completePurchase(purchase);
+            }
+            Navigator.pop(context);
+            break;
           case PurchaseStatus.error:
             customLog(
               "❌ Purchase canceled or error: ${purchase.error?.message}",
@@ -446,6 +420,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
             if (purchase.pendingCompletePurchase) {
               await _iap.completePurchase(purchase);
             }
+            Navigator.pop(context);
             break;
         }
       }

@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:convert';
+// import 'dart:convert';
 import 'dart:io';
 // import 'dart:isolate';
 
@@ -15,10 +15,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+// import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:http/http.dart' as http;
+// import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -312,166 +312,175 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColor().kBlack,
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        title: customText(AppText().kTextHome, 16.0, context),
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-      ),
-      body: Column(
-        children: [
-          screenLoader == true
-              ? SizedBox()
-              : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Container(
-                  height: 160,
-                  width: 160,
-                  decoration: BoxDecoration(
-                    color: AppColor().kBlue,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.asset(AppImage().kAppLogo),
-                    ),
-                  ),
-                ),
-              ),
-          Spacer(),
-
-          screenLoader == true
-              ? SizedBox()
-              : Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: GestureDetector(
-                  onTap: () {
-                    checkSubStatus(context, '1');
-                  },
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColor().kBlack,
+        appBar: AppBar(
+          backgroundColor: Colors.blue,
+          title: customText(AppText().kTextHome, 16.0, context),
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+        ),
+        body: Column(
+          children: [
+            screenLoader == true
+                ? SizedBox()
+                : Padding(
+                  padding: const EdgeInsets.all(16.0),
                   child: Container(
-                    height: 70,
-                    width: MediaQuery.of(context).size.width,
+                    height: 160,
+                    width: 160,
                     decoration: BoxDecoration(
                       color: AppColor().kBlue,
                       borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: ExactAssetImage(AppImage().kPrimaryBlueImage),
-                        fit: BoxFit.cover,
-                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: Image.asset(AppImage().kSmallAppLogo),
-                        ),
-                        customText(
-                          'Calculator',
-                          22,
-                          context,
-                          fontWeight: FontWeight.w800,
-                          lightModeColor: AppColor().kWhite,
-                        ),
-                      ],
+                    child: Center(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: Image.asset(AppImage().kAppLogo),
+                      ),
                     ),
                   ),
                 ),
-              ),
-          screenLoader == true
-              ? SizedBox()
-              : Padding(
-                padding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
-                child: GestureDetector(
-                  onTap: () async {
-                    checkSubStatus(context, '2');
-                  },
-                  child: Container(
-                    height: 70,
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                      color: AppColor().kBlue,
-                      borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: ExactAssetImage(AppImage().kPrimaryYellowImage),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 28,
-                          height: 28,
-                          child: Image.asset(AppImage().kMathLogo),
-                        ),
-                        SizedBox(width: 4),
-                        customText(
-                          'PHOTO MATH',
-                          22,
-                          context,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            Spacer(),
 
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0, bottom: 24.0),
-            child: Column(
-              // mainAxisAlignment: MainAxisAlignment.center,
-              // crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // SizedBox(height: 16),
-                RichText(
-                  textAlign: TextAlign.center,
-                  text: TextSpan(
-                    text: 'By verifying yourself, you agree to our ',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                    children: [
-                      TextSpan(
-                        text: 'Terms',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
+            screenLoader == true
+                ? SizedBox()
+                : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GestureDetector(
+                    onTap: () {
+                      checkSubStatus(context, '1');
+                    },
+                    child: Container(
+                      height: 70,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        color: AppColor().kBlue,
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: ExactAssetImage(AppImage().kPrimaryBlueImage),
+                          fit: BoxFit.cover,
                         ),
-                        recognizer:
-                            TapGestureRecognizer()
-                              ..onTap = () {
-                                _launchUrl(
-                                  "https://incognitocalculator.com/terms-%26-conditions",
-                                );
-                              },
                       ),
-                      TextSpan(text: ' and '),
-                      TextSpan(
-                        text: 'Privacy Policy',
-                        style: TextStyle(
-                          color: Colors.blue,
-                          decoration: TextDecoration.underline,
-                        ),
-                        recognizer:
-                            TapGestureRecognizer()
-                              ..onTap = () {
-                                _launchUrl(
-                                  "https://incognitocalculator.com/privacy-policy",
-                                );
-                              },
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Image.asset(AppImage().kSmallAppLogo),
+                          ),
+                          customText(
+                            'Calculator',
+                            22,
+                            context,
+                            fontWeight: FontWeight.w800,
+                            lightModeColor: AppColor().kWhite,
+                          ),
+                        ],
                       ),
-                      TextSpan(text: '.'),
-                    ],
+                    ),
                   ),
                 ),
-              ],
+            screenLoader == true
+                ? SizedBox()
+                : Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                  ),
+                  child: GestureDetector(
+                    onTap: () async {
+                      checkSubStatus(context, '2');
+                    },
+                    child: Container(
+                      height: 70,
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                        color: AppColor().kBlue,
+                        borderRadius: BorderRadius.circular(12),
+                        image: DecorationImage(
+                          image: ExactAssetImage(
+                            AppImage().kPrimaryYellowImage,
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: Image.asset(AppImage().kMathLogo),
+                          ),
+                          SizedBox(width: 4),
+                          customText(
+                            'PHOTO MATH',
+                            22,
+                            context,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0, bottom: 24.0),
+              child: Column(
+                // mainAxisAlignment: MainAxisAlignment.center,
+                // crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // SizedBox(height: 16),
+                  RichText(
+                    textAlign: TextAlign.center,
+                    text: TextSpan(
+                      text: 'By verifying yourself, you agree to our ',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                      children: [
+                        TextSpan(
+                          text: 'Terms',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer:
+                              TapGestureRecognizer()
+                                ..onTap = () {
+                                  _launchUrl(
+                                    "https://incognitocalculator.com/terms-%26-conditions",
+                                  );
+                                },
+                        ),
+                        TextSpan(text: ' and '),
+                        TextSpan(
+                          text: 'Privacy Policy',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            decoration: TextDecoration.underline,
+                          ),
+                          recognizer:
+                              TapGestureRecognizer()
+                                ..onTap = () {
+                                  _launchUrl(
+                                    "https://incognitocalculator.com/privacy-policy",
+                                  );
+                                },
+                        ),
+                        TextSpan(text: '.'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
