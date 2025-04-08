@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:calculator/Classes/Screens/Maths/maths.dart';
 import 'package:calculator/Classes/Screens/calculator/calculator.dart';
 import 'package:calculator/Classes/Screens/home/subscription_checker.dart';
+import 'package:calculator/Classes/Screens/upgrade_now/android.dart';
 // import 'package:calculator/Classes/Screens/upgrade_now/ios.dart';
 import 'package:calculator/Classes/Screens/upgrade_now/upgrade_now.dart';
 import 'package:calculator/Classes/Utils/resources.dart';
@@ -46,32 +47,99 @@ class _HomeScreenState extends State<HomeScreen> {
     // store id
     Set<String> kIds = {InAppProductId().productId};
     if (Platform.isAndroid) {
-      customLog("In app product id in Android ======> $kIds");
-      storeInAppProductId = kIds.toString();
       final purchaseUpdated = _inAppPurchase.purchaseStream;
       _subscription = purchaseUpdated.listen(
         (purchases) {
-          _handlePurchaseUpdates(purchases);
+          _handlePurchaseUpdates2(
+            purchases,
+          ); // ✅ this will contain Android + iOS validation logic
         },
         onDone: () {
           _subscription.cancel();
         },
         onError: (error) {
-          // Handle error here.
-          customLog(error);
+          customLog("❌ Stream error: $error");
         },
       );
-      _initialize();
     } else if (Platform.isIOS) {
       customLog("In app product id in iOS ======> $kIds");
-      storeInAppProductId = kIds.toString();
+      storeInAppProductId = InAppProductId().productId;
       // _listenToPurchaseUpdates();
     }
   }
 
+  void checkAndroidSubStatus() async {
+    customLog("🔥 checkAndroidSubStatus() CALLED");
+
+    await InAppPurchase.instance.restorePurchases();
+    customLog("✅ restorePurchases() triggered");
+  }
+
+  void _handlePurchaseUpdates2(List<PurchaseDetails> purchases) async {
+    customLog("📦 Purchases received: ${purchases.length}");
+
+    bool hasActiveSubscription = false;
+
+    if (purchases.isEmpty) {
+      customLog("❌ No purchases to restore — treating user as not subscribed");
+      await storage.write(key: 'isSubscribed', value: 'false');
+      subscribed(false);
+      setState(() {
+        _isSubscribed = false;
+        screenLoader = false;
+      });
+      // push to calculator
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => CalculatorScreen()),
+      );
+      return;
+    }
+
+    for (var purchase in purchases) {
+      final productId = purchase.productID;
+      final purchaseToken = purchase.verificationData.serverVerificationData;
+
+      if (purchase.status == PurchaseStatus.purchased ||
+          purchase.status == PurchaseStatus.restored) {
+        if (Platform.isAndroid) {
+          final isSubscribed = await validateAndroidSubscription(
+            packageName: 'com.calculator.prod',
+            productId: productId,
+            purchaseToken: purchaseToken,
+          );
+
+          hasActiveSubscription = isSubscribed;
+          customLog(
+            isSubscribed
+                ? "🎉 Android: Subscribed!"
+                : "🚫 Android: Not Subscribed",
+          );
+        } else {
+          hasActiveSubscription = true;
+          customLog("✅ iOS: Subscribed!");
+        }
+
+        if (purchase.pendingCompletePurchase) {
+          await _inAppPurchase.completePurchase(purchase);
+        }
+      }
+    }
+
+    await storage.write(
+      key: 'isSubscribed',
+      value: hasActiveSubscription.toString(),
+    );
+    subscribed(hasActiveSubscription);
+    setState(() {
+      _isSubscribed = hasActiveSubscription;
+      screenLoader = false;
+    });
+  }
+
   void checkSubStatus(context, type) async {
-    showLoadingUI(context, "");
     if (Platform.isIOS) {
+      showLoadingUI(context, "");
       bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
 
       if (isSubscribed) {
@@ -114,82 +182,115 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } else {
-      bool isSubscribed = await SubscriptionHelper.checkAndroidSubscription();
-      if (isSubscribed) {
-        customLog("✅ YES — User is subscribed: Android");
-        Navigator.pop(context);
-      } else {
-        customLog("NO — User is not subscribed: Android");
-        Navigator.pop(context);
-      }
+      customLog("ANDROID");
+      checkAndroidSubStatus();
     }
   }
 
-  /*Future<String?> _getReceiptData() async {
-    if (!Platform.isIOS) return null;
-
-    // Restore purchases to refresh receipts
-    await InAppPurchase.instance.restorePurchases();
-
-    // Get the LATEST purchase from the stream
-    final List<PurchaseDetails> purchases =
-        await InAppPurchase.instance.purchaseStream.first;
-
-    if (purchases.isEmpty) return null;
-
-    // Return the most recent receipt
-    return purchases.last.verificationData.serverVerificationData;
-  }*/
-
-  /*void _listenToPurchaseUpdates() {
-    final Stream<List<PurchaseDetails>> purchaseUpdated =
+  /*void checkAndroidSubStatus() {
+    final Stream<List<PurchaseDetails>> purchaseUpdates =
         InAppPurchase.instance.purchaseStream;
 
-    _subscription = purchaseUpdated.listen(
-      (purchases) async {
-        for (var purchase in purchases) {
-          if (purchase.productID == InAppProductId().productId) {
-            if (purchase.status == PurchaseStatus.purchased ||
-                purchase.status == PurchaseStatus.restored) {
-              if (!purchase.pendingCompletePurchase) {
-                InAppPurchase.instance.completePurchase(purchase);
-              }
+    late final StreamSubscription<List<PurchaseDetails>> sub;
 
-              
+    sub = purchaseUpdates.listen((List<PurchaseDetails> purchases) async {
+      for (final purchase in purchases) {
+        if (purchase.status == PurchaseStatus.purchased) {
+          final productId = purchase.productID;
+          final purchaseToken =
+              purchase.verificationData.serverVerificationData;
 
-              customLog("🎉 Subscription is active in IOS!");
+          customLog("🔍 Validating: $productId");
 
-              setState(() {
-                _isSubscribed = true;
-              });
-              subscribed(true);
-              await storage.write(key: 'isSubscribed', value: 'true');
+          final isSubscribed = await validateAndroidSubscription(
+            packageName: 'com.calculator.prod',
+            productId: productId,
+            purchaseToken: purchaseToken,
+          );
 
-              // Complete the purchase
-              if (purchase.pendingCompletePurchase) {
-                _inAppPurchase.completePurchase(purchase);
-              }
-
-              // hasActiveSubscription = true;
-            } else {
-              setState(() async {
-                _isSubscribed = false;
-                subscribed(true);
-                await storage.write(key: 'isSubscribed', value: 'true');
-              });
-            }
+          if (isSubscribed) {
+            customLog("🎉 User is subscribed!");
+            // Save, navigate, or update state
+          } else {
+            customLog("🚫 User is not subscribed.");
           }
         }
-      },
-      onDone: () {
-        customLog("Cancelled");
-        _subscription.cancel();
-      },
-      onError: (error) {
-        customLog("❌ Purchase stream error: $error");
-      },
-    );
+      }
+
+      await sub.cancel(); // ✅ Cancel the listener after receiving response
+    });
+
+    // Trigger restored purchases (emits to the stream above)
+    InAppPurchase.instance.restorePurchases().then((_) {
+      customLog("✅ restorePurchases() triggered");
+    });
   }*/
+
+  /*Future<String?> _getReceiptData() async {
+      if (!Platform.isIOS) return null;
+
+      // Restore purchases to refresh receipts
+      await InAppPurchase.instance.restorePurchases();
+
+      // Get the LATEST purchase from the stream
+      final List<PurchaseDetails> purchases =
+          await InAppPurchase.instance.purchaseStream.first;
+
+      if (purchases.isEmpty) return null;
+
+      // Return the most recent receipt
+      return purchases.last.verificationData.serverVerificationData;
+    }*/
+
+  /*void _listenToPurchaseUpdates() {
+      final Stream<List<PurchaseDetails>> purchaseUpdated =
+          InAppPurchase.instance.purchaseStream;
+
+      _subscription = purchaseUpdated.listen(
+        (purchases) async {
+          for (var purchase in purchases) {
+            if (purchase.productID == InAppProductId().productId) {
+              if (purchase.status == PurchaseStatus.purchased ||
+                  purchase.status == PurchaseStatus.restored) {
+                if (!purchase.pendingCompletePurchase) {
+                  InAppPurchase.instance.completePurchase(purchase);
+                }
+
+                
+
+                customLog("🎉 Subscription is active in IOS!");
+
+                setState(() {
+                  _isSubscribed = true;
+                });
+                subscribed(true);
+                await storage.write(key: 'isSubscribed', value: 'true');
+
+                // Complete the purchase
+                if (purchase.pendingCompletePurchase) {
+                  _inAppPurchase.completePurchase(purchase);
+                }
+
+                // hasActiveSubscription = true;
+              } else {
+                setState(() async {
+                  _isSubscribed = false;
+                  subscribed(true);
+                  await storage.write(key: 'isSubscribed', value: 'true');
+                });
+              }
+            }
+          }
+        },
+        onDone: () {
+          customLog("Cancelled");
+          _subscription.cancel();
+        },
+        onError: (error) {
+          customLog("❌ Purchase stream error: $error");
+        },
+      );
+    }*/
 
   @override
   void dispose() {

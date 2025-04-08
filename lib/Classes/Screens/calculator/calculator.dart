@@ -315,6 +315,7 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   getValue() async {
     bool isLoggedIn = await getBoolSecurely('isSubscribed');
     customLog("🔍 Retrieved: isLoggedIn = $isLoggedIn");
+    // return;
     if (isLoggedIn) {
       isSubscribed = true;
       checkStoredUrl();
