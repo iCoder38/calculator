@@ -69,61 +69,58 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  ///
-  /*checkSubscription() async {
-    bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
-
-    if (isSubscribed) {
-      customLog("✅ User is subscribed");
-
-     
-    } else {
-      customLog("🚫 User is not subscribed");
-      
-    }
-  }*/
-
   void checkSubStatus(context, type) async {
     showLoadingUI(context, "");
-    bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
+    if (Platform.isIOS) {
+      bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
 
-    if (isSubscribed) {
-      customLog("✅ YES — User is subscribed");
-      setState(() {
-        _isSubscribed = true;
-      });
-      subscribed(true);
-      await storage.write(key: 'isSubscribed', value: 'true');
-      Navigator.pop(context);
-      if (type == '1') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CalculatorScreen()),
-        );
+      if (isSubscribed) {
+        customLog("✅ YES — User is subscribed");
+        setState(() {
+          _isSubscribed = true;
+        });
+        subscribed(true);
+        await storage.write(key: 'isSubscribed', value: 'true');
+        Navigator.pop(context);
+        if (type == '1') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CalculatorScreen()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => MathsScreen()),
+          );
+        }
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => MathsScreen()),
-        );
+        customLog("🚫 NO — User is not subscribed");
+        setState(() {
+          _isSubscribed = false;
+        });
+        subscribed(false);
+        await storage.write(key: 'isSubscribed', value: 'false');
+        Navigator.pop(context);
+        if (type == '1') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CalculatorScreen()),
+          );
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
+          );
+        }
       }
     } else {
-      customLog("🚫 NO — User is not subscribed");
-      setState(() {
-        _isSubscribed = false;
-      });
-      subscribed(false);
-      await storage.write(key: 'isSubscribed', value: 'false');
-      Navigator.pop(context);
-      if (type == '1') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => CalculatorScreen()),
-        );
+      bool isSubscribed = await SubscriptionHelper.checkAndroidSubscription();
+      if (isSubscribed) {
+        customLog("✅ YES — User is subscribed: Android");
+        Navigator.pop(context);
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => UpgradeNowScreen()),
-        );
+        customLog("NO — User is not subscribed: Android");
+        Navigator.pop(context);
       }
     }
   }

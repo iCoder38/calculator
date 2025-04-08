@@ -22,8 +22,12 @@
 	<string>APPL</string>
 	<key>CFBundleIconName</key>
 	<string>AppIcon</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Privacy Calculator would like to access your camera to upload image for maths section.</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Privacy Calculator would like to access your gallery to upload image for maths section.</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>

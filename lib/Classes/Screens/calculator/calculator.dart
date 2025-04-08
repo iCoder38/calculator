@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:calculator/Classes/Logic/logic.dart';
 import 'package:calculator/Classes/Utils/drawer.dart';
@@ -38,6 +39,9 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   // banner
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
+  /*String bannerLiveId = 'ca-app-pub-9800539067539365/1367212124';
+  String bannerTestId = 'ca-app-pub-9800539067539365/1367212124';*/
+  // 'ca-app-pub-3940256099942544/6300978111';
 
   // flutter secure storage
   final FlutterSecureStorage storage = FlutterSecureStorage();
@@ -47,6 +51,23 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   String storeURL = '';
 
   bool screenLoader = true;
+
+  // interstitial
+  bool _hasShownInterstitial = false;
+  InterstitialAd? _interstitialAd;
+  bool _isInterstitialAdLoaded = false;
+  /*String interstitialLiveId = 'ca-app-pub-9800539067539365/4146469422';
+  String interstitialTestId = 'ca-app-pub-9800539067539365/4146469422';*/
+  // 'ca-app-pub-3940256099942544/1033173712';
+
+  String currentBannerAdType = 'none';
+  String currentInterstitialAdType = 'none';
+
+  // Ad Unit IDs
+  String bannerLiveId = '';
+  String bannerTestId = '';
+  String interstitialLiveId = '';
+  String interstitialTestId = '';
 
   final List<String> primaryButtons = [
     'C',
@@ -219,10 +240,76 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    // init banner
-    _loadAd();
+
+    // Platform-based assignment
+    if (Platform.isIOS) {
+      bannerLiveId = 'ca-app-pub-9800539067539365/1367212124';
+      bannerTestId = 'ca-app-pub-3940256099942544/2934735716';
+
+      interstitialLiveId = 'ca-app-pub-9800539067539365/4146469422';
+      interstitialTestId = 'ca-app-pub-3940256099942544/4411468910';
+    } else if (Platform.isAndroid) {
+      bannerLiveId = 'ca-app-pub-9800539067539365/1367212124';
+      bannerTestId = 'ca-app-pub-3940256099942544/6300978111';
+
+      interstitialLiveId = 'ca-app-pub-9800539067539365/1328734392';
+      interstitialTestId = 'ca-app-pub-3940256099942544/1033173712';
+    }
+
     // load subscription
     getValue();
+
+    // bottom ad
+    // init banner
+    _loadAd();
+  }
+
+  void _loadInterstitialAd({bool isFallback = false}) {
+    final adUnitId = isFallback ? interstitialTestId : interstitialLiveId;
+
+    InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (InterstitialAd ad) {
+          currentInterstitialAdType = isFallback ? 'test' : 'live';
+          debugPrint('✅ Interstitial Ad Loaded: $currentInterstitialAdType');
+          _interstitialAd = ad;
+          _isInterstitialAdLoaded = true;
+          _showInterstitialAd();
+        },
+        onAdFailedToLoad: (LoadAdError error) {
+          debugPrint('❌ Interstitial failed to load ($adUnitId): $error');
+
+          if (!isFallback) {
+            debugPrint('🔁 Retrying with test ad...');
+            _loadInterstitialAd(isFallback: true); // Fallback to test
+          }
+        },
+      ),
+    );
+  }
+
+  void _showInterstitialAd() {
+    if (_interstitialAd != null && _isInterstitialAdLoaded) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (InterstitialAd ad) {
+          ad.dispose();
+          // ✅ DO NOT reload here
+          _interstitialAd = null;
+          _isInterstitialAdLoaded = false;
+        },
+        onAdFailedToShowFullScreenContent: (InterstitialAd ad, AdError error) {
+          ad.dispose();
+          debugPrint('Ad failed to show: $error');
+          _interstitialAd = null;
+          _isInterstitialAdLoaded = false;
+        },
+      );
+      _interstitialAd!.show();
+      _interstitialAd = null;
+      _isInterstitialAdLoaded = false;
+    }
   }
 
   getValue() async {
@@ -233,7 +320,19 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
       checkStoredUrl();
     } else {
       ensureUserDocumentExists();
+      checkSubBeforeAd();
     }
+  }
+
+  void checkSubBeforeAd() async {
+    await Future.delayed(Duration(milliseconds: 200)).then((v) {
+      // full page ad
+      // show full screen ad only once per open
+      if (!_hasShownInterstitial) {
+        _hasShownInterstitial = true;
+        _loadInterstitialAd();
+      }
+    });
   }
 
   void ensureUserDocumentExists() async {
@@ -454,24 +553,30 @@ class _CalculatorScreenState extends State<CalculatorScreen> {
         );
   }
 
-  void _loadAd() {
+  void _loadAd({bool isFallback = false}) {
+    final adUnitId = isFallback ? bannerTestId : bannerLiveId;
+
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-9800539067539365/1367212124',
-      // 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: adUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
-        onAdLoaded: (ad) {
-          if (kDebugMode) {
-            print('Ad Loaded');
-          }
+        onAdLoaded: (Ad ad) {
+          currentBannerAdType = isFallback ? 'test' : 'live';
+          debugPrint('✅ Banner Ad Loaded: $currentBannerAdType');
+          debugPrint('✅ Banner Ad Loaded: $adUnitId');
           setState(() {
             _isAdLoaded = true;
           });
         },
-        onAdFailedToLoad: (ad, error) {
-          debugPrint('BannerAd failed to load: $error');
+        onAdFailedToLoad: (Ad ad, LoadAdError error) {
+          debugPrint('❌ BannerAd failed to load ($adUnitId): $error');
           ad.dispose();
+
+          if (!isFallback) {
+            debugPrint('🔁 Retrying with test banner ad...');
+            _loadAd(isFallback: true); // Retry with test ad
+          }
         },
       ),
     );
