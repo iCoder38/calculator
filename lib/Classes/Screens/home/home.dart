@@ -140,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void checkSubStatus(context, type) async {
     if (Platform.isIOS) {
       showLoadingUI(context, "");
-      bool isSubscribed = await SubscriptionHelper.checkIOSSubscription();
+      bool isSubscribed = await SubscriptionHelper.checkIOSSubscription(
+        context,
+      );
 
       if (isSubscribed) {
         customLog("✅ YES — User is subscribed");
@@ -149,7 +151,13 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         subscribed(true);
         await storage.write(key: 'isSubscribed', value: 'true');
-        Navigator.pop(context);
+
+        try {
+          Navigator.pop(context);
+        } catch (e) {
+          print("⚠️ Tried to pop but no route in stack: $e");
+        }
+
         if (type == '1') {
           Navigator.push(
             context,
@@ -168,7 +176,13 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         subscribed(false);
         await storage.write(key: 'isSubscribed', value: 'false');
-        Navigator.pop(context);
+
+        try {
+          Navigator.pop(context);
+        } catch (e) {
+          customLog("⚠️ Tried to pop but no route in stack: $e");
+        }
+
         if (type == '1') {
           Navigator.push(
             context,
