@@ -37,7 +37,7 @@ class AppConfig {
 
 class MathRapidApi {
   String url = "https://photomath1.p.rapidapi.com/maths/v2/solve-problem";
-  String key = "b340a5889bmsha51af22247bdf7bp134354jsnb57156d6218c";
+  String get key => const String.fromEnvironment('RAPIDAPI_KEY');
 }
 
 class InAppProductId {

@@ -5,11 +5,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 // import 'package:in_app_purchase/in_app_purchase.dart';
-// import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
+import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 // import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Preserve the existing backend's App Store receipt validation flow.
+  if (Platform.isIOS) {
+    // ignore: deprecated_member_use
+    await InAppPurchaseStoreKitPlatform.enableStoreKit1();
+  }
 
   // google ads
   (MobileAds.instance.initialize());
@@ -43,9 +49,3 @@ void main() async {
   @override
   bool shouldShowPriceConsent() => false;
 }*/
-
-// in-app purchase key
-// 7697FFKGM4
-
-// b934ad85e17c41ffa2cf045740cfdd10
-// 76530cc572664bf793437adddfcf7d3b

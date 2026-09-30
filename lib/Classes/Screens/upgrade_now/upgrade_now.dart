@@ -367,14 +367,7 @@ class _UpgradeNowScreenState extends State<UpgradeNowScreen> {
     final PurchaseParam param = PurchaseParam(productDetails: product);
     bool started = false;
 
-    if (Platform.isIOS) {
-      started = await _iap.buyNonConsumable(purchaseParam: param);
-    } else {
-      started = await _iap.buyConsumable(
-        purchaseParam: param,
-        autoConsume: false,
-      );
-    }
+    started = await _iap.buyNonConsumable(purchaseParam: param);
 
     if (!started) {
       customLog("❌ Purchase process did not start!");

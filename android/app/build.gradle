@@ -42,7 +42,7 @@ android {
 
     signingConfigs {
         release {
-            storeFile file(keystoreProperties['storeFile'])
+            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
             storePassword keystoreProperties['storePassword']
             keyAlias keystoreProperties['keyAlias']
             keyPassword keystoreProperties['keyPassword']
@@ -64,9 +64,8 @@ flutter {
 }
 
 dependencies {
+    // Required directly by NormalTheme in res/values/styles.xml.
+    implementation 'com.google.android.material:material:1.10.0'
     implementation 'androidx.multidex:multidex:2.0.1' // Required for multidex support
-    implementation 'com.stripe:stripe-android:20.18.0' // Stripe SDK
-    implementation 'com.google.android.libraries.places:places:3.3.0' // Google Places API
-    implementation 'org.bouncycastle:bcprov-jdk15to18:1.70' // BouncyCastle for security
-    implementation 'com.android.billingclient:billing:6.0.1' // Latest version
+    // Google Play Billing is supplied by in_app_purchase_android.
 }

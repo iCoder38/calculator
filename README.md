@@ -1,16 +1,54 @@
-# calculator
+# Calculator Incognito
 
-A new Flutter project.
+Android package: `com.calculator.prod`.
 
-## Getting Started
+## Local Android setup
 
-This project is a starting point for a Flutter application.
+Flutter 3.44.1 / Dart 3.12.1, Java 17, Android SDK 36, NDK 28.2.13676358,
+Gradle 8.14, AGP 8.13.2. Run `flutter pub get` before building.
 
-A few resources to get you started if this is your first Flutter project:
+Local signing files: `android/upload-keystore.jks` and `android/key.properties`.
+Both are ignored by Git. Keep BOTH in a secure off-device backup. Do not
+regenerate the key after submitting its certificate to Play.
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Local Photo Math configuration: `config/local.json`; use `config/local.example.json`
+as a template on a new machine. This value is ignored by Git.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter analyze
+flutter test
+FLUTTER_BIN=/absolute/path/to/flutter ./tool/build_android_release.sh
+```
+
+For local runs also pass `--dart-define-from-file=config/local.json`.
+This keeps the API key out of new source commits; it DOES NOT conceal it from
+the compiled app or remove it from Git history. Rotate the previously embedded
+key and move authenticated Photo Math requests behind an owned backend to secure it.
+
+## Play upload recovery
+
+The new upload key alias is `upload`. Submit ONLY its public PEM certificate via
+Play Console > Protected with Play > Manage Play app signing > Request upload key
+reset. Wait for Google's activation time before uploading. Do not use Upgrade key.
+
+Builds are for local verification until the listing's highest version code is known.
+Confirm the package name, then choose a higher unused version code for the update:
+
+```sh
+./tool/build_android_release.sh --build-number=NEXT_UNUSED_CODE --build-name=RELEASE_VERSION
+```
+
+Test on the internal track before production rollout.
+
+## External services to verify before publishing
+
+- Firebase project access, Firestore rules and the public URL document.
+- Receipt validation endpoints on `thebluebamboo.in`: server source and credentials
+  are not in this repository.
+- Play subscription `ad_free_099`, active base plan and license testers.
+- AdMob account/ad units and Photo Math key/quota.
+- Billing uses library 8 through Android plugin 0.5.0, pinned before its AGP 9
+  migration. iOS retains StoreKit 1 receipt mode and needs separate device testing.
+
+https://support.google.com/googleplay/android-developer/answer/9842756
+https://docs.flutter.dev/deployment/android
